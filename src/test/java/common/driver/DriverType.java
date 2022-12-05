@@ -1,4 +1,6 @@
 package common.driver;
 
-enum  DriverType {
+public enum DriverType {
+    CHROME,
+    FIREFOX
 }
