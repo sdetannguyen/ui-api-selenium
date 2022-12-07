@@ -6,7 +6,7 @@ Some simple test scripts related to UI and API Automation for https://fundingsoc
 
 ## How it works
 
-The skeleton/framework built on top of [Selenium](https://www.selenium.dev/) for UI test, [RestAssured](https://rest-assured.io/) for API test, [TestNG](https://testng.org/doc/) for assertion and other supporting libs. The base build tool is [Maven](https://maven.apache.org/) to manage project's build, artifacts, reporting system and Java as following the main programing language.
+The skeleton/framework built on top of [Selenium](https://www.selenium.dev/) for UI test, [RestAssured](https://rest-assured.io/) for API test, [TestNG](https://testng.org/doc/) for assertion and other supporting libraries. The base build tool is [Maven](https://maven.apache.org/) to manage project's build, artifacts, reporting system and Java as following the main programing language.
 
 ## Required installation
 
