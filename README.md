@@ -27,7 +27,7 @@ mvn
 - We use RestAssured for API test so the framework is centralized with one repository and one programing language. This helps the engineer easy to implement and getting familiar with automation testing more faster.
 - With API test written by RestAssured, it can be reuseable by using common API script, create/storing pre-condition data or create/storing cookie/sessions to support the UI Test running more faster.
 
-### Cons
+#### Cons
 - Time consuming with API test implementation using RestAssured due to the engineer should understand the core components, common function stuffs before start to implement 
 
 
@@ -46,6 +46,6 @@ mvn
 - We use Selenium for UI test and it has a ton of document on the internet that helps the junior/fresher engineer quickly catchup on how to work with the framework and UI automation. Beside that, Selenium supports many browsers and cloud testing platforms (BrowserStack, SauceLabs...) for automated testing pipeline.
 - 
 
-### Cons
+#### Cons
 - The framework built from scatch so it does support some great stuffs like reporting system, wrappers, tools, BDD...
 - The testing scripts written by Selenium are not easy to handle. Especially, some UI components that only able to interact by javascript, jquery or hidden elements.
