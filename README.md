@@ -17,8 +17,16 @@ The skeleton/framework built on top of [Selenium](https://www.selenium.dev/) for
 
 ### Local run command
 
+- Compile the project
+
 ```
-mvn 
+mvn compile
+```
+
+- Run the API test suite by single thread
+
+```
+mvn test -Dtest="api_test.UserManagementTest"
 ```
 
 ### Pros and cons
@@ -36,9 +44,16 @@ mvn
 
 ### Local run command
 
+- Compile the project
+
 ```
-mvn 
+mvn compile
 ```
+
+- Run the UI test suite by single thread
+
+```
+mvn test -Dtest="acceptance_test.FundingSocietiesTest"
 
 ### Pros and cons
 
