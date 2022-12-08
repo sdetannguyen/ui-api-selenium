@@ -47,7 +47,7 @@ mvn test -DsuiteXmlFile="src/test/java/parallelRun.xml"
 
 ### API Test
 
-- **Test cases:** The API Test simulate the full workflow start from user logins successfully, store the response's' token to header and try then to create/get/update/delete a new user. At the end, verify the status codes, response body by specific properties or response's object comparation.
+- **Test cases:** The API Test simulate the full workflow start from user logins successfully, store the response's' token to header and try then to create/get/update/delete a new user on [Reqres](https://reqres.in/). At the end, verify the status codes, response body by specific properties or response's object comparation.
 
 - **Problem:**
    * we have one issue with the API at [here](https://github.com/sdetannguyen/qa-assessment/blob/696512ae4e7473d166dcbedabca29f60e0198d7b/src/test/java/api_test/UserManagementTest.java#L40), the issue seems related to the application.
