@@ -108,6 +108,6 @@ org.openqa.selenium.StaleElementReferenceException: stale element reference: ele
 - The testing scripts written by Selenium are not easy to handle. Especially, some UI components that only able to interact by javascript, jquery or hidden elements.
 
 #### Personal views
-- As a QA, before we start anything related to build up automation testing, we should consider the value that the tech stacks/framework can bring to our target application testing. Every framework/testing tools has their own pros and cons so we should be flexible and open minded to pick one. Cheer!
+- As a QA, before we start anything related to build up automation testing, we should consider the value that the tech stacks/framework can bring to our target application testing. Every framework/testing tools has their own pros and cons so we should be flexible and open minded to pick one. Cheers!
 
 
