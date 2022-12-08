@@ -2,7 +2,6 @@ package acceptance_test.pom;
 
 import common.utils.SeleniumActionUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 
 public abstract class BasePage {
 
@@ -23,19 +22,15 @@ public abstract class BasePage {
     public static final String NAV_BAR = ".//div[@class='navbar']//a[text()='%s']";
     public static final String BUTTON = ".//button[contains(text(),'%s')]";
 
-    protected WebDriver driver;
-
-    public BasePage(WebDriver driver) {
-        this.driver = driver;
-    }
+    protected SeleniumActionUtils seleniumActionUtils = new SeleniumActionUtils();
 
     public void clickNavigationMenu(TabMenu tabName) {
-        SeleniumActionUtils.waitAndClick(driver, By.xpath(String.format(NAV_BAR, tabName.getValue())));
-        SeleniumActionUtils.waitUntilThePageIsFullyLoaded(driver, 60);
+        seleniumActionUtils.waitAndClick(By.xpath(String.format(NAV_BAR, tabName.getValue())));
+        seleniumActionUtils.waitUntilThePageIsFullyLoaded(60);
     }
 
     public Boolean isButtonDisplayedAndClickable(String name) {
-        return SeleniumActionUtils.isElementClickable(driver, By.xpath(String.format(BUTTON, name)));
+        return seleniumActionUtils.isElementClickable(By.xpath(String.format(BUTTON, name)));
     }
 
 }

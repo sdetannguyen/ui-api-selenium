@@ -1,11 +1,9 @@
 package acceptance_test.pom.component;
 
-import acceptance_test.pom.StatisticPage;
-import common.utils.SeleniumActionUtils;
+import acceptance_test.pom.BasePage;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 
-public class GeneralTab {
+public class GeneralTab extends BasePage {
 
     public enum TOGGLE {
         TOTAL_APPROVED,
@@ -18,12 +16,6 @@ public class GeneralTab {
     private static final By TOTAL_AS_LATEST_QUARTER_POINT = By.cssSelector("g.highcharts-markers.highcharts-tracker path:last-child");
     private static final By TOTAL_NUMBER = By.cssSelector("g tspan[style='font-weight:bold;']");
 
-    WebDriver driver;
-
-    public GeneralTab(WebDriver driver) {
-        this.driver = driver;
-    }
-
     public void clickToggle(TOGGLE toggleName) {
         int index = 0;
         switch (toggleName) {
@@ -31,14 +23,13 @@ public class GeneralTab {
             case AMOUNT_DISBURSED: index = 1; break;
             case DEFAULT_RATE: index = 2; break;
         }
-        SeleniumActionUtils.waitUntilElementsPresent(driver, TOGGLES).get(index).click();
-        SeleniumActionUtils.waitUntilThePageIsFullyLoaded(driver, 60);
+        seleniumActionUtils.waitUntilElementsPresent(TOGGLES).get(index).click();
+        seleniumActionUtils.waitUntilThePageIsFullyLoaded(60);
     }
 
     public String getTotalAmountLatestResult() {
-        SeleniumActionUtils.moveToChartPoint(driver,
-                SeleniumActionUtils.waitUntilElementsPresent(driver, CHARTS).get(0),
-                SeleniumActionUtils.waitUntilElementPresent(driver, TOTAL_AS_LATEST_QUARTER_POINT));
-        return SeleniumActionUtils.waitUntilElementPresent(driver, TOTAL_NUMBER).getText();
+        seleniumActionUtils.moveToChartPoint(seleniumActionUtils.waitUntilElementsPresent(CHARTS).get(0),
+                seleniumActionUtils.waitUntilElementPresent(TOTAL_AS_LATEST_QUARTER_POINT));
+        return seleniumActionUtils.waitUntilElementPresent(TOTAL_NUMBER).getText();
     }
 }

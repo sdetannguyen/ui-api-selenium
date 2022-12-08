@@ -9,7 +9,6 @@ import java.util.Objects;
 public class JsonUtils {
 
     private JsonUtils() {
-
     }
 
     public static JSONObject convertFileToJsonObject(String path) {

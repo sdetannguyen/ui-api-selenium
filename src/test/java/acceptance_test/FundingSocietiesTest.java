@@ -1,35 +1,15 @@
 package acceptance_test;
 
 import acceptance_test.pom.BasePage;
-import acceptance_test.pom.HomePage;
 import acceptance_test.pom.StatisticPage;
 import acceptance_test.pom.component.GeneralTab;
 import acceptance_test.pom.component.RepaymentTab;
-import common.AutomationConfigs;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.Map;
 
 public class FundingSocietiesTest extends BaseTest {
-
-    HomePage homePage;
-    StatisticPage statisticPage;
-
-    @BeforeMethod
-    public void beforeMethod() {
-        driver = driverManager.getDriver();
-        driver.get((String) AutomationConfigs.getInstance().getConfigs().get("application.ui.baseUrl"));
-        homePage = new HomePage(driver);
-        statisticPage = new StatisticPage(driver);
-    }
-
-    @AfterMethod
-    public void afterMethod() {
-        driverManager.quitDriver();
-    }
 
     @Test
     public void verify_TotalFunded_NoOfFinancing_DefaultRate_And_FinancingFulfillmentRate() {

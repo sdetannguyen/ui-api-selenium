@@ -3,9 +3,7 @@ package acceptance_test.pom;
 import acceptance_test.pom.component.DisbursementTab;
 import acceptance_test.pom.component.GeneralTab;
 import acceptance_test.pom.component.RepaymentTab;
-import common.utils.SeleniumActionUtils;
 import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import java.util.HashMap;
@@ -36,21 +34,20 @@ public class StatisticPage extends BasePage {
     public RepaymentTab repaymentTab;
     public DisbursementTab disbursementTab;
 
-    public StatisticPage(WebDriver driver) {
-        super(driver);
-        generalTab = new GeneralTab(driver);
-        repaymentTab = new RepaymentTab(driver);
-        disbursementTab = new DisbursementTab(driver);
+    public StatisticPage() {
+        generalTab = new GeneralTab();
+        repaymentTab = new RepaymentTab();
+        disbursementTab = new DisbursementTab();
     }
 
     public void clickTab(StatisticTab statisticTab) {
         if(isButtonDisplayedAndClickable(statisticTab.getValue())) {
-            SeleniumActionUtils.waitAndClick(driver, By.xpath(String.format(BUTTON, statisticTab.getValue())));
+            seleniumActionUtils.waitAndClick(By.xpath(String.format(BUTTON, statisticTab.getValue())));
         }
     }
 
     public Map<String, String> getStatisticDetails() {
-        WebElement statisticElement = SeleniumActionUtils.waitUntilElementPresent(driver, STATISTIC_DETAILS);
+        WebElement statisticElement = seleniumActionUtils.waitUntilElementPresent(STATISTIC_DETAILS);
         List<WebElement> statisticValues = statisticElement.findElements(STATISTIC_DETAILS_VALUE);
         List<WebElement> statisticKeys = statisticElement.findElements(STATISTIC_DETAILS_KEY);
         Map<String, String> statisticDetails = new HashMap<>();
