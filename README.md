@@ -77,7 +77,7 @@ org.openqa.selenium.StaleElementReferenceException: stale element reference: ele
    * `POM` - `BasePage` `HomePage` `StatisticPage` contains web elements and actions on specific/common page
    * `DriverManager` `DriverFactory` `DriverStorage` - to init, manage drivers
    * `SeleniumActionUtils` - contains Selenium compilation actions
-   * 
+   * `BaseTest` - contains TestNG hooks, driver(s) initialization
    * `AutomationConfigs` - To read the config from config.properties, available at global level and singleton
    * Parallelism using `TestNG Parallel Execution` feature and java `ThreadLocal` to handle the driver initialization 
 
