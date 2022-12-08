@@ -20,7 +20,7 @@ The skeleton/framework built on top of [Selenium](https://www.selenium.dev/) for
 
 ## UI & API test instruction
 
-- Clone the source code (http method) and access the source code
+- Clone the source code and access the source code
 ```
 git clone https://github.com/sdetannguyen/qa-assessment.git
 ```
