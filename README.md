@@ -52,7 +52,9 @@ mvn test -Dtest="acceptance_test.FundingSocietiesTest"
 mvn test -DsuiteXmlFile="src/test/java/parallelRun.xml"
 ```
 
-*Note:* Please make sure your local machine is completed the setup for JAVA_HOME and MAVEN_HOME environment variables before running the test
+*Note:* 
+  * Please make sure your local machine is completed the setup for JAVA_HOME and MAVEN_HOME environment variables before running the test
+  * When running the test, if the cursor hover on the UI charts then the test could be failed due to getting the incorrect chart point so please move the cursor out of the chart.
 
 ## Problems and solutions
 
