@@ -15,7 +15,7 @@ The skeleton/framework built on top of [Selenium](https://www.selenium.dev/) for
 - [Git](https://git-scm.com/)
 
 
-## API test instruction
+## UI & API test instruction
 
 - Compile the project
 
@@ -29,32 +29,26 @@ mvn compile
 mvn test -Dtest="api_test.UserManagementTest"
 ```
 
-## UI test instruction
-
-- Compile the project
-
-```
-mvn compile
-```
-
 - Run the UI test suite by single thread
 
 ```
 mvn test -Dtest="acceptance_test.FundingSocietiesTest"
 ```
 
-## Parallel run command
+- Parallel run command (the current config for triggering all UI & API test suites)
 
 ```
 mvn test -DsuiteXmlFile="src/test/java/parallelRun.xml"
 ```
 
+*Note:* Please make sure your local machine is completed the setup for JAVA_HOME and MAVEN_HOME environment variables before running the test
+
 ### Pros and cons
 
 #### Pros
 - We use RestAssured for API test so the framework is centralized with one repository and one programing language. This helps the engineer easy to implement and getting familiar with automation testing more faster.
-- With API test written by RestAssured, it can be reuseable by using common API script, create/storing pre-condition data or create/storing cookie/sessions to support the UI Test running more faster.
-- We use Selenium for UI test and it has a ton of document on the internet that helps the junior/fresher engineer quickly catchup on how to work with the framework and UI automation. Beside that, Selenium supports many browsers and cloud testing platforms (BrowserStack, SauceLabs...) for automated testing pipeline.
+- With API test written by RestAssured, it can be reuseable by using common API script, create/store pre-condition data or create/store cookie/sessions to support the UI Test running more faster.
+- We use Selenium for UI test and it has a ton of document on the internet that helps the engineer quickly catchup on how to work with the framework and UI automation. Beside that, Selenium supports many browsers and cloud testing platforms (BrowserStack, SauceLabs...) for automated testing pipeline.
 
 #### Cons
 - Time consuming with API test implementation using RestAssured due to the engineer should understand the core components, common function stuffs before start to implement 
