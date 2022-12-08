@@ -14,6 +14,9 @@ The skeleton/framework built on top of [Selenium](https://www.selenium.dev/) for
 - [Apache Maven](https://maven.apache.org/)
 - [Git](https://git-scm.com/)
 
+## Supported Browser/OS
+- Chrome (latest version) [WebDriverManager](https://github.com/bonigarcia/webdrivermanager) for driver management and versions.
+- Test script has been tested and ran on Window 10 and MacOS.
 
 ## UI & API test instruction
 
