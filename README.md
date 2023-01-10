@@ -1,4 +1,4 @@
-# QA Assessment - UI & API Automation 
+# UI & API Automation with Selenium 
 
 Some simple test scripts related to UI and API Automation for https://fundingsocieties.com application
 
