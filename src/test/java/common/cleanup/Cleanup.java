@@ -1,17 +1,15 @@
 package common.cleanup;
 
-import common.apis.UserAPIs;
+import common.apis.UsersApiClient;
 import io.restassured.response.Response;
 import org.testng.Assert;
 
 public class Cleanup {
 
-    private Cleanup() {
-    }
+    private Cleanup() {}
 
-    public static void cleanupSingleUser(int userId) {
-        UserAPIs userAPIs = new UserAPIs();
-        Response response = userAPIs.deleteUser(userId);
+    public static void cleanupUser(int userId) {
+        Response response = new UsersApiClient().deleteUser(userId);
         Assert.assertEquals(response.statusCode(), 200);
     }
 }

@@ -1,113 +1,261 @@
-# UI & API Automation with Selenium 
+# ui-api-selenium
 
-Some simple test scripts related to UI and API Automation for https://fundingsocieties.com application
+A Java-based test automation framework for UI and API tests, built on Selenium, RestAssured, and TestNG. Designed with scalability and team adoption in mind — a single-language, single-repository platform that any engineer can contribute to without QA specialisation.
 
+Target application: [fundingsocieties.com](https://fundingsocieties.com) (UI) · [reqres.in](https://reqres.in) (API)
 
+---
 
-## How it works
+## Framework Design
 
-The skeleton/framework built on top of [Selenium](https://www.selenium.dev/) for UI test, [RestAssured](https://rest-assured.io/) for API test, [TestNG](https://testng.org/doc/) for assertion and other supporting libraries. The base build tool is [Maven](https://maven.apache.org/) to manage project's build, artifacts, reporting system and Java as following the main programing language.
+### Architecture
 
-## Required installation
+```
+src/test/java/
+  common/                     ← infrastructure layer (shared, opinionated core)
+    driver/                   ← WebDriver lifecycle and thread isolation
+    apis/                     ← HTTP base client and service-specific clients
+    utils/                    ← Selenium actions, JSON, sorting helpers
+    cleanup/                  ← test data teardown
+    AutomationConfigs.java    ← singleton config reader
+  acceptance_test/            ← UI abstraction + test layer
+    pom/                      ← page objects and component objects
+    BaseTest.java             ← TestNG hooks, driver initialisation
+    FundingSocietiesTest.java ← UI test specs
+  api_test/                   ← API abstraction + test layer
+    BaseTest.java             ← TestNG hooks, API client initialisation
+    UserManagementTest.java   ← API test specs
+  data/                       ← test data files (per environment)
+  pojos/                      ← typed response models
+  parallelRun.xml             ← TestNG parallel execution suite
+src/resources/
+  config.properties           ← environment config
+```
 
-- [JDK 1.8](https://www.oracle.com/java/technologies/downloads/) or higher
-- [Apache Maven](https://maven.apache.org/)
+### Layer 1 — Infrastructure (`common/`)
+
+Owns everything that should be consistent across teams: how drivers are managed, how HTTP calls are constructed, how configuration is read. These are the non-negotiables — changing them here changes them everywhere.
+
+| Component | Responsibility |
+|---|---|
+| `AutomationConfigs` | Singleton config reader — reads `config.properties`, accessible globally |
+| `DriverManager` / `DriverFactory` | WebDriver lifecycle: start, create, stop |
+| `DriverStorage` | `ThreadLocal<WebDriver>` — isolates driver per thread for parallel safety |
+| `DriverType` | Enum of supported browsers — add a new entry to support a new browser |
+| `BaseAPIs` | HTTP method wrappers (GET, POST, PUT, PATCH, DELETE) with request/response logging |
+| `Cleanup` | Removes test data created during test execution |
+
+`DriverStorage` is the key enabler for parallel execution. By storing each driver in a `ThreadLocal`, workers never share state — no locking, no race conditions on driver access.
+
+### Layer 2 — Abstraction (`pom/` and `apis/`)
+
+Tests never call Selenium directly or construct raw HTTP requests. All interactions go through the abstraction layer.
+
+**UI — Page Objects and Components**
+
+```
+acceptance_test/pom/
+  BasePage.java               ← navigation helpers, common wait logic
+  HomePage.java               ← home page actions
+  StatisticPage.java          ← statistics page entry point
+  component/
+    GeneralTab.java           ← General tab chart interactions
+    RepaymentTab.java         ← Repayment tab chart interactions
+    DisbursementTab.java      ← Disbursement tab chart interactions
+```
+
+The component layer exists because the statistics page has embedded Highcharts v9.2.2 charts that require JavaScript interaction. Breaking each tab into its own component class isolates the fragile chart-interaction logic, so a change to one chart doesn't affect the others.
+
+**API — Typed Service Clients**
+
+```
+common/apis/
+  BaseAPIs.java               ← RestAssured wrapper with logging
+  LoginAPIs.java              ← authentication, token storage
+  UserAPIs.java               ← user resource CRUD (extends LoginAPIs)
+```
+
+`LoginAPIs` handles authentication once and stores the session token. `UserAPIs` injects the token into all subsequent requests. Tests call `userAPIs.createUser(payload)` — not raw HTTP.
+
+**Typed Response Models**
+
+```
+pojos/
+  UserResponse.java           ← Jackson-mapped API response model
+```
+
+Assertions are made against typed objects, not raw JSON strings.
+
+### Layer 3 — Tests (`acceptance_test/` and `api_test/`)
+
+Test specs are thin. Each test arranges its data, acts through the abstraction layer, and asserts on typed results. No Selenium calls, no raw HTTP, no config reads.
+
+```java
+// api_test/UserManagementTest.java
+@Test
+public void createNewUserSuccessful() {
+    UserResponse created = userAPIs.createUser(testUser);
+
+    Assert.assertEquals(created.getName(), testUser.getName());
+    Assert.assertEquals(created.getJob(), testUser.getJob());
+}
+```
+
+---
+
+## Scalability & Platform Thinking
+
+### Opinionated Core, Extensible Edges
+
+The `common/` package is the shared core — teams depend on it, they don't fork it. It handles the things that must be consistent: driver management, HTTP base client, config, cleanup. These are not optional.
+
+The edges are where teams have legitimate differences. New page objects live in feature-specific packages. New API clients extend `BaseAPIs`. New browser support means adding a `DriverType` entry and a `DriverManager` subclass. Teams extend through composition and inheritance off stable base classes — not by editing shared infrastructure.
+
+### Parallel Execution and Thread Safety
+
+Parallel test execution is configured in `parallelRun.xml`:
+
+```xml
+<suite name="Parallel Run" parallel="methods" thread-count="2">
+```
+
+Thread safety is enforced by `DriverStorage`:
+
+```java
+// common/driver/DriverStorage.java
+private static final ThreadLocal<WebDriver> driverThreadLocal = new ThreadLocal<>();
+```
+
+Each worker thread gets its own `WebDriver` instance. There is no shared mutable state across threads. Increasing `thread-count` scales execution horizontally without code changes.
+
+To scale further — to a Kubernetes-based execution platform like Testkube — the same isolation principle applies. Each test pod gets its own driver and its own data scope. The `AutomationConfigs` singleton reads from environment variables in containerised environments, keeping infra config out of test code.
+
+### Test Isolation and Data Ownership
+
+Every test creates what it needs and cleans up after itself. The `Cleanup` class handles teardown as a TestNG `@AfterMethod` concern, not inside the test body. This means:
+
+- Tests don't share database records or user sessions
+- Parallel workers don't collide on test data
+- A failing test doesn't leave state that breaks the next run
+
+Test data is externalised in `data/qa/users.json` (per environment), deserialized into typed objects via `JsonUtils`. This separates data from test logic — changing test data doesn't require touching test code.
+
+### Known Failure Mode: Flaky Chart Interactions
+
+At scale, one flaky test becomes alert noise that teams learn to ignore — which is dangerous. The known flakiness in this framework is the `StaleElementReferenceException` on Highcharts pie chart elements:
+
+```
+org.openqa.selenium.StaleElementReferenceException: stale element reference:
+element is not attached to the page document
+```
+
+The current mitigation is retry logic inside `SeleniumActionUtils`. The long-term fix in a scaled platform would be a flaky test detection pipeline: track pass rate per test over time, automatically quarantine tests that fall below a threshold, and file them as bugs rather than re-running indefinitely.
+
+### Observability
+
+Maven Surefire generates test results after each run (`target/surefire-reports`). For a scaled platform, the next layer is integrating JUnit XML output into a metrics pipeline — publishing flaky test rates, execution times, and coverage trends to a dashboard (Grafana, Datadog) so engineering managers see quality signals per squad, not just per-run pass/fail.
+
+---
+
+## Prerequisites
+
+- [JDK 1.8+](https://www.oracle.com/java/technologies/downloads/)
+- [Apache Maven 3.x](https://maven.apache.org/) — or use the bundled `apache-maven-3.8.6/` included in the repo
 - [Git](https://git-scm.com/)
+- Chrome (latest) — WebDriverManager handles driver version matching automatically
 
-## Supported Browser/OS
-- Chrome (latest version) [WebDriverManager](https://github.com/bonigarcia/webdrivermanager) for driver management and versions.
-- Test script has been tested and ran on Window 10 and MacOS.
+**Environment variables required before running:**
 
-## UI & API test instruction
-
-- Clone the source code and access the source code
+```bash
+export JAVA_HOME=/path/to/jdk
+export MAVEN_HOME=/path/to/maven   # or use ./apache-maven-3.8.6/bin/mvn
+export PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
 ```
+
+---
+
+## Local Setup
+
+**1. Clone the repo**
+```bash
 git clone https://github.com/sdetannguyen/qa-assessment.git
-```
-```
-cd [sourceCode]
+cd ui-api-selenium
 ```
 
-- Compile the project
-
-```
+**2. Compile the project**
+```bash
 mvn compile
 ```
 
-- Run the API test suite by single thread
+---
 
-```
+## Running Tests
+
+**Run the API test suite**
+```bash
 mvn test -Dtest="api_test.UserManagementTest"
 ```
 
-- Run the UI test suite by single thread
-
-```
+**Run the UI test suite**
+```bash
 mvn test -Dtest="acceptance_test.FundingSocietiesTest"
 ```
 
-- Run parallel (the current config will trigger all UI & API test suites)
-
-```
+**Run both suites in parallel (2 threads)**
+```bash
 mvn test -DsuiteXmlFile="src/test/java/parallelRun.xml"
 ```
 
-*Note:* 
-  * Please make sure your local machine is completed the setup for JAVA_HOME and MAVEN_HOME environment variables before running the test
-  * When running the test, if the cursor hover on the UI charts then the test could be failed due to getting the incorrect chart point so please move the cursor out of the chart.
+**UI test note:** During the run, do not hover your cursor over the statistics charts. Highcharts recalculates tooltip positions on hover and the element reference becomes stale, which can cause the chart interaction tests to fail.
 
-## Problems and solutions
+---
 
-### API Test
+## Configuration
 
-- **Test cases:** The API Test simulate the full workflow start from user logins successfully, store the response's' token to header and try then to create/get/update/delete a new user on [Reqres](https://reqres.in/). At the end, verify the status codes, response body by specific properties or response's object comparation.
+`src/resources/config.properties`
 
-- **Problem:**
-   * we have one issue with the API at [here](https://github.com/sdetannguyen/qa-assessment/blob/696512ae4e7473d166dcbedabca29f60e0198d7b/src/test/java/api_test/UserManagementTest.java#L40), the issue seems related to the application.
-   * The parallelism for current API test doesn't support for testing data, methods so in the real case, it may will failed if we enrich our testing scripts
+| Key | Default | Description |
+|---|---|---|
+| `application.api.baseUrl` | `https://reqres.in` | Base URL for API tests |
+| `application.ui.baseUrl` | `https://fundingsocieties.com` | Base URL for UI tests |
+| `application.ui.waitTimeOut` | `60` | Implicit wait timeout in seconds |
+| `application.env` | `qa` | Environment selector (controls which data folder is loaded) |
+| `application.testUser1.username` | `eve.holt@reqres.in` | API test credential |
+| `application.testUser1.password` | `cityslicka` | API test credential |
+| `automation.browser` | `chrome` | Browser type (maps to `DriverType` enum) |
 
-- **Solution:** We use normal approach to write the API test like common REST APIs, specific/business logic APIs, Utils to convert json file to object, configuration handler for common config. Some details implementation:
-   * `BaseAPIs` - Common REST APIs protocols and logging 
-   * `LoginAPIs` `UserAPIs` - Specific APIs that extended the BaseAPIs
-   * `Cleanup` - To cleanup test data after completing test
-   * `AutomationConfigs` - To read the config from config.properties, available at global level and singleton
-   * Parallelism using `TestNG Parallel Execution` feature
+---
 
-### UI Test
+## Test Reports
 
-- **Test cases:** The UI test cases includes all test cases from the assessment document
-
-- **Problem:**
-   * We need to interact with UI chart (rendering by Highcharts v9.2.2) so the Selenium scripts should be developed carefully especially with some elements need to handle by javascript/jquery.
-   * The parallelism for UI is more complicated than other due to we need to handle the Selenium driver (get, set) by multiple threads, isolate testing data, common function
-   * Flaky could be remaining if we trigger the test by parallelism. The known issue related to stale element when catching elments on pie charts. We already added retry at the selenium steps but it still be a risk in the future. Logs for issue
+Surefire generates reports after each run:
 
 ```
-org.openqa.selenium.StaleElementReferenceException: stale element reference: element is not attached to the page document
+target/surefire-reports/
 ```
 
-- **Solution:** We use normal approach to write the UI test Page Object Model, Driver Manager, Selenium Utils, configuration handler for common config. Some details implementation:
-   * `POM` - `BasePage` `HomePage` `StatisticPage` contains web elements and actions on specific/common page
-   * `DriverManager` `DriverFactory` `DriverStorage` - to init, manage drivers
-   * `SeleniumActionUtils` - contains Selenium compilation actions
-   * `BaseTest` - contains TestNG hooks, driver(s) initialization
-   * `AutomationConfigs` - To read the config from config.properties, available at global level and singleton
-   * Parallelism using `TestNG Parallel Execution` feature and java `ThreadLocal` to handle the driver initialization 
+To view the HTML summary:
+```bash
+open target/surefire-reports/index.html
+```
 
+---
 
-## Pros and cons with selected tech stacks, trades off
+## Technology Stack
 
-#### Pros
-- We use RestAssured for API test so the framework is centralized with one repository and one programing language. This helps the engineer easy to implement and getting familiar with automation testing more faster on both UI and API.
-- With API test written by RestAssured, it can be reuseable by using common API script, create/store pre-condition data or create/store cookie/sessions to support the UI Test running more faster.
-- We use Selenium for UI test and it has a ton of document on the internet that helps the engineer quickly catchup on how to work with the framework and UI automation. Beside that, Selenium supports many browsers and cloud testing platforms (BrowserStack, SauceLabs...) for automated testing pipeline.
+| Layer | Technology | Why |
+|---|---|---|
+| UI automation | Selenium WebDriver 4.6.0 | Broad browser support, extensive documentation, cloud platform integrations (BrowserStack, SauceLabs) |
+| API automation | RestAssured 5.3.0 | Fluent DSL for HTTP, fits naturally in a Java test project |
+| Test runner | TestNG 7.4.0 | Built-in parallel execution, flexible suite configuration |
+| Driver management | WebDriverManager 5.3.1 | Eliminates manual ChromeDriver version management |
+| Serialisation | Jackson 2.14.0 | Typed JSON-to-POJO mapping for API response assertions |
+| Build | Maven 3.8.6 | Dependency management, lifecycle, Surefire reporting |
 
-#### Cons
-- Time consuming with API test implementation using RestAssured due to the engineer should understand the core components, common function stuffs before start to implement.
-- The framework built from scatch so it does support some great stuffs like reporting system, wrappers, tools, BDD...
-- The testing scripts written by Selenium are not easy to handle. Especially, some UI components that only able to interact by javascript, jquery or hidden elements.
+### Trade-offs
 
-#### Personal views
-- As a QA, before we start anything related to build up automation testing, we should consider the value that the tech stacks/framework can bring to our target application testing. Every framework/testing tools has their own pros and cons so we should be flexible and open minded to pick one. Cheers!
+**Single language (Java) for both UI and API** — the framework lives in one repository with one language. An engineer contributing to API tests can read UI test code and vice versa. The cost is that RestAssured has a steeper learning curve than simpler HTTP clients.
 
+**TestNG over Cucumber/BDD** — direct assertion-based tests are faster to write and easier to debug. The trade-off is that non-engineers can't read the specs without understanding code. BDD makes sense when product owners are actively involved in test authorship; here, the audience is engineers.
 
+**Selenium for Highcharts** — Selenium is the right tool for cross-browser UI validation, but it struggles with JavaScript-heavy chart libraries. The component object pattern (`GeneralTab`, `RepaymentTab`, `DisbursementTab`) isolates this complexity so the unstable chart interaction code doesn't bleed into the stable page navigation code.
