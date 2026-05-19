@@ -35,8 +35,8 @@ public abstract class BaseAPIs {
     }
 
     protected Response delete(RequestSpecification spec, String endpoint) {
-        RequestSpecification httpRequest = RestAssured.given();
-        Response response = httpRequest.when().patch(endpoint);
+        RequestSpecification httpRequest = RestAssured.given(spec);
+        Response response = httpRequest.when().delete(endpoint);
         response.then().log().all();
         return response;
     }
