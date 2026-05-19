@@ -40,18 +40,13 @@ jobs:
           reporter: java-junit
 
   security:
-    name: Snyk Security Scan
+    name: Trivy Security Scan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
         with:
-          java-version: "17"
-          distribution: temurin
-          cache: maven
-      - name: Install Snyk CLI
-        run: npm install -g snyk
-      - name: Run Snyk scan
-        run: snyk test --severity-threshold=high --all-projects
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          scan-type: fs
+          severity: HIGH,CRITICAL
+          exit-code: 1
