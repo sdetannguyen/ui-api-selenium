@@ -36,7 +36,7 @@ jobs:
         if: always()
         with:
           name: Unit Test Results
-          path: target/surefire-reports/*.xml
+          path: target/surefire-reports/TEST-*.xml
           reporter: java-junit
 
   security:
@@ -49,10 +49,9 @@ jobs:
           java-version: "17"
           distribution: temurin
           cache: maven
-      - name: Build project
-        run: ./apache-maven-3.8.6/bin/mvn compile --no-transfer-progress
-      - uses: snyk/actions/maven@master
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+      - name: Run Snyk scan
+        run: snyk test --severity-threshold=high --all-projects
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=high
