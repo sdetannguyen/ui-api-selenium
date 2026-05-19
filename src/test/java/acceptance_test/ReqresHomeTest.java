@@ -7,7 +7,7 @@ public class ReqresHomeTest extends BaseTest {
 
     @Test
     public void verifyHeroHeadingIsDisplayed() {
-        reqresHomePage.goto_();
+        reqresHomePage.navigateTo();
 
         Assert.assertTrue(reqresHomePage.isHeroHeadingVisible(),
                 "Hero heading should be visible on reqres.in homepage");
@@ -15,7 +15,7 @@ public class ReqresHomeTest extends BaseTest {
 
     @Test
     public void verifyLoginSuccessfulWithValidCredentials() {
-        loginPage.goto_();
+        loginPage.navigateTo();
         loginPage.login(
                 automationConfigs.getConfigs().getProperty("application.auth.username"),
                 automationConfigs.getConfigs().getProperty("application.auth.password")

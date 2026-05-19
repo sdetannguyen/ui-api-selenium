@@ -6,7 +6,7 @@ import org.openqa.selenium.By;
 
 public class PracticeAutomationLoginPage extends BasePage {
 
-    public void goto_() {
+    public void navigateTo() {
         DriverStorage.getDriver().get(
                 AutomationConfigs.getInstance().getConfigs().getProperty("application.auth.baseUrl")
                         + "/practice-test-login/");

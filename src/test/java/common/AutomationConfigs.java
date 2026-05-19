@@ -1,6 +1,5 @@
 package common;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -16,8 +15,8 @@ public class AutomationConfigs {
     }
 
     public static AutomationConfigs getInstance() {
-        if(instance == null) {
-            return new AutomationConfigs();
+        if (instance == null) {
+            instance = new AutomationConfigs();
         }
         return instance;
     }

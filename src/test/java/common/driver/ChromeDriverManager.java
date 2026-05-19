@@ -15,8 +15,9 @@ public class ChromeDriverManager extends DriverManager {
 
     @Override
     public void stopService() {
-        if (null != chService && chService.isRunning())
+        if (null != chService && chService.isRunning()) {
             chService.stop();
+        }
     }
 
     @Override
