@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ui-api-selenium — Framework Overview</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3347;
+      --accent: #6c8ef5;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --code-bg: #131720;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ── Language toggle ── */
+    .lang-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 32px;
+    }
+    .lang-bar span { color: var(--muted); font-size: 13px; margin-right: 4px; }
+    .lang-btn {
+      padding: 5px 16px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .lang-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 48px 32px 96px; }
+
+    .version { display: none; }
+    .version.active { display: block; }
+
+    /* ── Hero ── */
+    .hero { margin-bottom: 56px; }
+    .hero h1 { font-size: 32px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 8px; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { color: var(--muted); font-size: 16px; max-width: 600px; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .badge {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: var(--surface);
+    }
+
+    /* ── Sections ── */
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 48px 0 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+    h3 { font-size: 15px; font-weight: 600; color: var(--accent2); margin: 24px 0 10px; }
+    p { color: var(--muted); margin-bottom: 12px; }
+
+    /* ── Architecture tree ── */
+    .tree {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+    .tree .dir { color: var(--accent); font-weight: 600; }
+    .tree .file { color: var(--text); }
+    .tree .comment { color: var(--muted); }
+    .tree .conn { color: #3a4055; user-select: none; }
+
+    /* ── Layer cards ── */
+    .layers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 8px; }
+    @media (max-width: 680px) { .layers { grid-template-columns: 1fr; } }
+    .layer-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .layer-card .num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .layer-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+    .layer-card ul { padding-left: 16px; }
+    .layer-card li { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+
+    /* ── Features grid ── */
+    .features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (max-width: 600px) { .features { grid-template-columns: 1fr; } }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .feature-card .icon { font-size: 22px; margin-bottom: 8px; }
+    .feature-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .feature-card p { font-size: 13px; margin: 0; }
+
+    /* ── Pros / Cons ── */
+    .verdict { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .verdict { grid-template-columns: 1fr; } }
+    .verdict-card {
+      background: var(--surface);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .verdict-card.good { border: 1px solid #1f4a37; }
+    .verdict-card.bad  { border: 1px solid #4a1f1f; }
+    .verdict-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+    .verdict-card.good h4 { color: var(--green); }
+    .verdict-card.bad  h4 { color: var(--red); }
+    .verdict-card li { font-size: 13px; color: var(--muted); margin-bottom: 8px; padding-left: 4px; list-style: none; }
+    .verdict-card li::before { margin-right: 8px; }
+    .verdict-card.good li::before { content: "✓"; color: var(--green); }
+    .verdict-card.bad  li::before { content: "✗"; color: var(--red); }
+
+    /* ── Missing ── */
+    .missing-list { list-style: none; }
+    .missing-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .missing-list li .tag {
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .tag.high   { background: #4a1f1f; color: var(--red); }
+    .tag.medium { background: #3a3010; color: var(--yellow); }
+    .tag.low    { background: #1a2a3a; color: var(--accent); }
+
+    /* ── Tradeoff table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      background: var(--surface2);
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    th:first-child { border-radius: 8px 0 0 0; }
+    th:last-child  { border-radius: 0 8px 0 0; }
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      vertical-align: top;
+    }
+    td:first-child { color: var(--text); font-weight: 500; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: var(--surface); }
+
+    /* ── vs Playwright ── */
+    .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .vs-grid { grid-template-columns: 1fr; } }
+    .vs-card {
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+    .vs-card.selenium { background: var(--surface); }
+    .vs-card.playwright { background: var(--surface2); }
+    .vs-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+    .vs-card.selenium h4 { color: #fb923c; }
+    .vs-card.playwright h4 { color: var(--green); }
+    .vs-card li { font-size: 13px; color: var(--muted); list-style: none; margin-bottom: 8px; padding-left: 4px; }
+    .vs-card li::before { margin-right: 8px; }
+    .vs-card.selenium li::before   { content: "→"; color: #fb923c; }
+    .vs-card.playwright li::before { content: "→"; color: var(--green); }
+    .verdict-box {
+      margin-top: 20px;
+      padding: 16px 20px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .verdict-box strong { color: var(--text); }
+
+    /* ── Code snippet ── */
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent2);
+    }
+
+    /* ── Architecture diff ── */
+    .diff-label {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .diff-label span {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .diff-label .lbl-sel  { background: #2a1800; color: #fb923c; }
+    .diff-label .lbl-pw   { background: #0a2a1a; color: var(--green); }
+    .diff-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      font-size: 12.5px;
+    }
+    @media (max-width: 700px) {
+      .diff-row { grid-template-columns: 1fr; }
+    }
+    .diff-concept {
+      background: var(--surface2);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      border-right: 1px solid var(--border);
+    }
+    .diff-sel, .diff-pw {
+      padding: 12px 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .diff-sel {
+      background: #140d00;
+      color: #fb923c;
+      border-right: 1px solid var(--border);
+    }
+    .diff-pw {
+      background: #001a0d;
+      color: #34d399;
+    }
+    .diff-sel .cm, .diff-pw .cm { color: #3a4a3a; }
+    .diff-sel .kw { color: #fbbf24; }
+    .diff-pw  .kw { color: #6ee7b7; }
+    .diff-sel .ty { color: #fdba74; }
+    .diff-pw  .ty { color: #a7f3d0; }
+    .diff-struct {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 700px) { .diff-struct { grid-template-columns: 1fr; } }
+    .diff-struct .tree { margin: 0; }
+  </style>
+</head>
+<body>
+
+<div class="lang-bar">
+  <span>Language:</span>
+  <button class="lang-btn active" onclick="setLang('en')">English</button>
+  <button class="lang-btn" onclick="setLang('vi')">Tiếng Việt</button>
+</div>
+
+<!-- ═══════════════════════════════════════ ENGLISH ═══════════════════════════════════════ -->
+<div id="en" class="version active">
+<div class="container">
+
+  <div class="hero">
+    <h1>ui-api-<span>selenium</span></h1>
+    <p>A Java-based test automation framework for UI and API tests. Built for team adoption — not just personal use.</p>
+    <div class="badge-row">
+      <span class="badge">Java 8</span>
+      <span class="badge">Selenium 4.6</span>
+      <span class="badge">RestAssured 5.3</span>
+      <span class="badge">TestNG 7.4</span>
+      <span class="badge">Maven 3.8</span>
+      <span class="badge">WebDriverManager 6.1</span>
+      <span class="badge">Jackson 2.17</span>
+    </div>
+  </div>
+
+  <!-- STRUCTURE -->
+  <h2>Structure</h2>
+  <p>Three strict layers. Each layer has one job and depends only on the layer below it.</p>
+
+  <div class="layers">
+    <div class="layer-card">
+      <div class="num">Layer 1</div>
+      <h4>Infrastructure <code>common/</code></h4>
+      <ul>
+        <li>AutomationConfigs (singleton config)</li>
+        <li>DriverManager / DriverFactory</li>
+        <li>DriverStorage (ThreadLocal)</li>
+        <li>BaseAPIs (HTTP wrappers)</li>
+        <li>Cleanup (teardown)</li>
+      </ul>
+    </div>
+    <div class="layer-card">
+      <div class="num">Layer 2</div>
+      <h4>Abstraction <code>pom/ apis/</code></h4>
+      <ul>
+        <li>ReqresHomePage</li>
+        <li>PracticeAutomationLoginPage</li>
+        <li>UsersApiClient</li>
+        <li>JsonPlaceholderUser (POJO)</li>
+      </ul>
+    </div>
+    <div class="layer-card">
+      <div class="num">Layer 3</div>
+      <h4>Tests <code>acceptance_test/ api_test/</code></h4>
+      <ul>
+        <li>ReqresHomeTest (UI)</li>
+        <li>UsersApiTest (API)</li>
+        <li>Thin AAA specs only</li>
+        <li>No Selenium or HTTP calls</li>
+      </ul>
+    </div>
+  </div>
+
+  <br />
+  <div class="tree">
+<span class="dir">src/test/java/</span>
+  <span class="dir">common/</span>                     <span class="comment">← infrastructure layer (shared, opinionated core)</span>
+    <span class="dir">driver/</span>                   <span class="comment">← WebDriver lifecycle and thread isolation</span>
+    <span class="dir">apis/</span>                     <span class="comment">← HTTP base client and service-specific clients</span>
+    <span class="dir">utils/</span>                    <span class="comment">← Selenium actions, JSON, sorting helpers</span>
+    <span class="dir">cleanup/</span>                  <span class="comment">← test data teardown</span>
+    <span class="file">AutomationConfigs.java</span>    <span class="comment">← singleton config reader</span>
+  <span class="dir">acceptance_test/</span>            <span class="comment">← UI abstraction + test layer</span>
+    <span class="dir">pom/</span>                      <span class="comment">← page objects</span>
+    <span class="file">BaseTest.java</span>             <span class="comment">← TestNG hooks, driver initialisation</span>
+    <span class="file">ReqresHomeTest.java</span>       <span class="comment">← UI test specs</span>
+  <span class="dir">api_test/</span>                   <span class="comment">← API abstraction + test layer</span>
+    <span class="file">BaseTest.java</span>             <span class="comment">← TestNG hooks, API client initialisation</span>
+    <span class="file">UsersApiTest.java</span>         <span class="comment">← API test specs</span>
+  <span class="dir">unit/</span>                       <span class="comment">← infrastructure unit tests</span>
+  <span class="dir">pojos/</span>                      <span class="comment">← typed response models</span>
+  <span class="file">parallelRun.xml</span>             <span class="comment">← TestNG parallel execution suite</span>
+  <span class="file">unitTests.xml</span>               <span class="comment">← TestNG unit test suite (CI default)</span>
+<span class="dir">src/resources/</span>
+  <span class="file">config.properties</span>           <span class="comment">← environment config</span>
+  </div>
+
+  <!-- FEATURES -->
+  <h2>Current Features</h2>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">🌐</div>
+      <h4>UI Tests (Selenium)</h4>
+      <p>Hero heading visibility on reqres.in · Login flow on practicetestautomation.com · Headed Chrome via WebDriverManager</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔌</div>
+      <h4>API Tests (RestAssured)</h4>
+      <p>Full CRUD on JSONPlaceholder /users — list, get, create, delete · Typed assertions via Jackson POJOs</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⚡</div>
+      <h4>Parallel Execution</h4>
+      <p>TestNG <code>parallel="methods"</code> with 2 threads · Thread-safe via <code>ThreadLocal&lt;WebDriver&gt;</code> in DriverStorage · Race condition proof</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🧪</div>
+      <h4>Unit Tests</h4>
+      <p>AutomationConfigs singleton correctness · JsonUtils null safety · Fast, no browser, CI default suite</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔍</div>
+      <h4>Checkstyle Linting</h4>
+      <p>Custom ruleset: braces, imports, whitespace, naming · Runs as separate CI job on every push</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🛡️</div>
+      <h4>Trivy Security Scan</h4>
+      <p>Filesystem scan on every push and PR · Fails CI on HIGH/CRITICAL CVEs · No token or account needed</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🚀</div>
+      <h4>CI / GitHub Actions</h4>
+      <p>3 parallel jobs: Checkstyle · Unit Tests with dorny/test-reporter · Trivy security scan</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⚙️</div>
+      <h4>Externalised Config</h4>
+      <p><code>config.properties</code> for all URLs, credentials, timeouts, browser type · Per-environment test data in <code>data/qa/</code></p>
+    </div>
+  </div>
+
+  <!-- INTENT -->
+  <h2>Intent</h2>
+  <p>This framework is designed as a <strong style="color:var(--text)">platform</strong>, not a script collection. The goal is that any engineer on a team — not just QA — can contribute tests without specialised knowledge. The opinionated <code>common/</code> core enforces consistency; the edges (page objects, API clients) are where teams extend freely.</p>
+  <p>The secondary intent is to demonstrate scalability thinking: <code>ThreadLocal</code> isolation for parallel safety today, the same isolation principle applies in a Kubernetes pod-per-test setup tomorrow.</p>
+
+  <!-- GOOD / BAD -->
+  <h2>What Works Well / What Doesn't</h2>
+  <div class="verdict">
+    <div class="verdict-card good">
+      <h4>Works Well</h4>
+      <ul>
+        <li>ThreadLocal driver isolation — parallel tests never collide</li>
+        <li>Typed API responses — assertions are refactor-safe</li>
+        <li>Clean layer separation — test code reads like plain English</li>
+        <li>Fast CI default — unit tests run in &lt;2s, no browser needed</li>
+        <li>Security scanning built in from the start</li>
+        <li>Config externalised — no hardcoded URLs in test code</li>
+      </ul>
+    </div>
+    <div class="verdict-card bad">
+      <h4>Doesn't Work Well</h4>
+      <ul>
+        <li>E2E tests not in CI — real Chrome can't run on GitHub Actions without Xvfb setup</li>
+        <li>Selenium 4.6 is behind — CDP warnings on Chrome 148, latest is 4.x</li>
+        <li>No headless toggle in config — has to be hardcoded</li>
+        <li>AutomationConfigs reads file on every call — no caching</li>
+        <li>No retry logic for flaky UI interactions</li>
+        <li>Test coverage is thin — 2 UI and 4 API tests total</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- MISSING -->
+  <h2>What's Missing</h2>
+  <ul class="missing-list">
+    <li>
+      <span class="tag high">High</span>
+      <span><strong style="color:var(--text)">E2E tests in CI</strong> — UI tests run locally only. CI needs headless Chrome + Xvfb, or switch to a remote grid (Selenium Grid, BrowserStack).</span>
+    </li>
+    <li>
+      <span class="tag high">High</span>
+      <span><strong style="color:var(--text)">Retry mechanism</strong> — No handling for transient failures (network blips, slow page loads). A <code>@Retry</code> listener or <code>IRetryAnalyzer</code> is standard in production frameworks.</span>
+    </li>
+    <li>
+      <span class="tag medium">Medium</span>
+      <span><strong style="color:var(--text)">HTML test reports</strong> — Surefire XML only. Allure or ExtentReports would give visual history, screenshots on failure, and trend charts.</span>
+    </li>
+    <li>
+      <span class="tag medium">Medium</span>
+      <span><strong style="color:var(--text)">Screenshot on failure</strong> — No hook captures a screenshot when a UI test fails. Debugging failures in CI is blind without it.</span>
+    </li>
+    <li>
+      <span class="tag medium">Medium</span>
+      <span><strong style="color:var(--text)">Headless mode config</strong> — Hardcoded headed Chrome. Should be a config flag so CI runs headless and local runs headed.</span>
+    </li>
+    <li>
+      <span class="tag low">Low</span>
+      <span><strong style="color:var(--text)">Multi-environment support</strong> — <code>config.properties</code> is single-environment. A proper setup uses per-env property files (<code>config-qa.properties</code>, <code>config-staging.properties</code>) selected by a Maven profile.</span>
+    </li>
+    <li>
+      <span class="tag low">Low</span>
+      <span><strong style="color:var(--text)">Logging</strong> — No SLF4J binding, only console output. A structured logger would make CI failures easier to trace.</span>
+    </li>
+  </ul>
+
+  <!-- TRADEOFFS -->
+  <h2>Tradeoffs</h2>
+  <table>
+    <thead>
+      <tr><th>Decision</th><th>Why this choice</th><th>Cost</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Java for both UI & API</td>
+        <td>Single language, single repo — any engineer can read and contribute to all tests</td>
+        <td>More verbose than Python/JS; RestAssured has a steeper learning curve</td>
+      </tr>
+      <tr>
+        <td>TestNG over JUnit 5</td>
+        <td>Built-in parallel execution config via XML; flexible suite composition</td>
+        <td>XML suite files are less discoverable than JUnit 5 annotations; smaller modern ecosystem</td>
+      </tr>
+      <tr>
+        <td>TestNG over Cucumber/BDD</td>
+        <td>Faster to write, easier to debug, no Gherkin layer to maintain</td>
+        <td>Non-engineers can't read specs without understanding code</td>
+      </tr>
+      <tr>
+        <td>ThreadLocal driver isolation</td>
+        <td>Parallel-safe without locks; scales horizontally by just increasing thread-count</td>
+        <td>Harder to reason about for engineers unfamiliar with ThreadLocal semantics</td>
+      </tr>
+      <tr>
+        <td>Selenium over Playwright</td>
+        <td>Cross-browser support, cloud grid integrations (BrowserStack, SauceLabs), mature ecosystem</td>
+        <td>More boilerplate, no built-in auto-wait, no trace viewer, slower to write</td>
+      </tr>
+      <tr>
+        <td>Trivy over Snyk</td>
+        <td>Free, no account, no token, works out of the box in GHA</td>
+        <td>No fix suggestion UI, no PR automation, no team dashboard</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ARCHITECTURE DIFF -->
+  <h2>Architecture Diff — Selenium vs Playwright</h2>
+  <p>Same three-layer philosophy, different language and tooling. Each row shows the equivalent pattern in both frameworks.</p>
+
+  <h3>Project Structure</h3>
+  <div class="diff-label">
+    <span class="lbl-sel">Selenium · Java</span>
+    <span class="lbl-pw">Playwright · TypeScript</span>
+  </div>
+  <div class="diff-struct">
+    <div class="tree">
+<span class="dir">src/test/java/</span>
+  <span class="dir">common/</span>               <span class="comment">← infrastructure</span>
+    <span class="dir">driver/</span>             <span class="comment">← WebDriver lifecycle</span>
+    <span class="dir">apis/</span>               <span class="comment">← HTTP clients</span>
+    <span class="file">AutomationConfigs.java</span>
+  <span class="dir">acceptance_test/</span>
+    <span class="dir">pom/</span>                <span class="comment">← page objects</span>
+    <span class="file">BaseTest.java</span>       <span class="comment">← @Before/@After</span>
+    <span class="file">ReqresHomeTest.java</span>
+  <span class="dir">api_test/</span>
+    <span class="file">UsersApiTest.java</span>
+  <span class="dir">pojos/</span>               <span class="comment">← typed models</span>
+<span class="dir">src/resources/</span>
+  <span class="file">config.properties</span>
+    </div>
+    <div class="tree">
+<span class="dir">src/</span>
+  <span class="dir">infrastructure/</span>       <span class="comment">← infrastructure</span>
+    <span class="file">env.config.ts</span>       <span class="comment">← URLs, env vars</span>
+    <span class="file">credentials.ts</span>
+  <span class="dir">lib/</span>
+    <span class="dir">ui/</span>                 <span class="comment">← page objects</span>
+      <span class="file">ReqresHomePage.ts</span>
+    <span class="dir">api/</span>                <span class="comment">← API clients</span>
+      <span class="file">ReqresApiClient.ts</span>
+    <span class="dir">fixtures/</span>           <span class="comment">← DI via test.extend()</span>
+      <span class="file">index.ts</span>
+  <span class="dir">tests/</span>
+    <span class="dir">ui/</span>
+    <span class="dir">api/</span>
+  <span class="file">playwright.config.ts</span>
+    </div>
+  </div>
+
+  <h3>Pattern Comparison</h3>
+  <div class="diff-label">
+    <span class="lbl-sel">Selenium · Java</span>
+    <span class="lbl-pw">Playwright · TypeScript</span>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Browser Setup</div>
+    <div class="diff-sel"><span class="cm">// WebDriverManager resolves driver binary</span>
+WebDriverManager.chromedriver().setup();
+<span class="kw">driver</span> = <span class="kw">new</span> <span class="ty">ChromeDriver</span>();</div>
+    <div class="diff-pw"><span class="cm">// Built into playwright.config.ts — no binary mgmt</span>
+projects: [{ name: <span class="ty">'chromium'</span>,
+  use: { ...devices[<span class="ty">'Desktop Chrome'</span>] } }]</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Thread / Process Isolation</div>
+    <div class="diff-sel"><span class="cm">// ThreadLocal — one driver per thread</span>
+<span class="kw">private static final</span> <span class="ty">ThreadLocal</span>&lt;<span class="ty">WebDriver</span>&gt;
+  driverThreadLocal = <span class="kw">new</span> <span class="ty">ThreadLocal</span>&lt;&gt;();</div>
+    <div class="diff-pw"><span class="cm">// Worker processes — no shared state by design</span>
+workers: 2  <span class="cm">// each worker is an isolated process</span></div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Page Object</div>
+    <div class="diff-sel"><span class="kw">public class</span> <span class="ty">ReqresHomePage</span> <span class="kw">extends</span> <span class="ty">BasePage</span> {
+  <span class="kw">private static final</span> <span class="ty">By</span> HEADING =
+    <span class="ty">By</span>.xpath(<span class="ty">".//h1[contains(.,'A real backend')]"</span>);
+
+  <span class="kw">public boolean</span> isHeroHeadingVisible() {
+    <span class="kw">return</span> waitUntilPresent(HEADING).isDisplayed();
+  }
+}</div>
+    <div class="diff-pw"><span class="kw">export class</span> <span class="ty">ReqresHomePage</span> {
+  <span class="kw">readonly</span> heading: <span class="ty">Locator</span>;
+  <span class="kw">constructor</span>(<span class="kw">private</span> page: <span class="ty">Page</span>) {
+    <span class="kw">this</span>.heading = page.getByRole(<span class="ty">'heading'</span>,
+      { name: <span class="ty">/A real backend/i</span> });
+  }
+}</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Waits</div>
+    <div class="diff-sel"><span class="cm">// Explicit — must wrap every interaction</span>
+<span class="kw">new</span> <span class="ty">WebDriverWait</span>(driver, <span class="ty">Duration</span>.ofSeconds(30))
+  .until(ExpectedConditions
+    .visibilityOfElementLocated(locator));</div>
+    <div class="diff-pw"><span class="cm">// Auto-wait — built into every action</span>
+<span class="kw">await</span> page.click(<span class="ty">'#submit'</span>);
+<span class="cm">// waits for element to be visible + stable</span></div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Test Fixtures / DI</div>
+    <div class="diff-sel"><span class="cm">// Inheritance — BaseTest wires up shared state</span>
+<span class="kw">public class</span> <span class="ty">ReqresHomeTest</span> <span class="kw">extends</span> <span class="ty">BaseTest</span> {
+  <span class="cm">// reqresHomePage injected via @BeforeMethod</span>
+  @<span class="ty">Test</span>
+  <span class="kw">public void</span> verifyHeroHeading() { ... }
+}</div>
+    <div class="diff-pw"><span class="cm">// Composition — test.extend() injects fixtures</span>
+<span class="kw">const</span> { test } = <span class="kw">import</span>(<span class="ty">'lib/fixtures'</span>);
+test(<span class="ty">'hero heading visible'</span>,
+  <span class="kw">async</span> ({ reqresHome }) =&gt; { ... });</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">API Testing</div>
+    <div class="diff-sel"><span class="cm">// RestAssured — separate dependency</span>
+<span class="ty">Response</span> res = given()
+  .contentType(<span class="ty">ContentType</span>.JSON)
+  .body(payload)
+  .post(<span class="ty">"/users"</span>);
+<span class="ty">JsonPlaceholderUser</span> user =
+  res.as(<span class="ty">JsonPlaceholderUser</span>.class);</div>
+    <div class="diff-pw"><span class="cm">// Built-in request context — no extra dep</span>
+<span class="kw">const</span> res = <span class="kw">await</span> request.post(<span class="ty">'/users'</span>,
+  { data: payload });
+<span class="kw">const</span> user = <span class="kw">await</span> res.json();</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Config</div>
+    <div class="diff-sel"><span class="cm"># config.properties</span>
+application.ui.baseUrl=https://reqres.in
+application.api.baseUrl=https://jsonplaceholder...
+automation.browser=chrome</div>
+    <div class="diff-pw"><span class="cm">// playwright.config.ts</span>
+<span class="kw">export default</span> defineConfig({
+  use: { baseURL: env.apiBaseUrl },
+  projects: [{ use: { ...devices[<span class="ty">'Desktop Chrome'</span>] } }]
+});</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Assertions</div>
+    <div class="diff-sel"><span class="cm">// TestNG Assert — synchronous</span>
+<span class="ty">Assert</span>.assertEquals(user.getName(), expected);
+<span class="ty">Assert</span>.assertTrue(page.isHeroHeadingVisible());</div>
+    <div class="diff-pw"><span class="cm">// expect() — async, auto-retry on failure</span>
+<span class="kw">await</span> expect(page.heading).toBeVisible();
+expect(user.name).toBe(expected);</div>
+  </div>
+
+  <!-- VS PLAYWRIGHT -->
+  <h2>Selenium vs Playwright</h2>
+  <div class="vs-grid">
+    <div class="vs-card selenium">
+      <h4>Selenium (this repo)</h4>
+      <ul>
+        <li>Cross-browser: Chrome, Firefox, Safari, Edge, IE</li>
+        <li>Cloud grid ready: BrowserStack, SauceLabs, Selenium Grid</li>
+        <li>Mature ecosystem, vast community, 15+ years of answers on SO</li>
+        <li>Java — same language as backend teams</li>
+        <li>Explicit waits, familiar mental model</li>
+        <li>Standard in enterprise QA hiring</li>
+      </ul>
+    </div>
+    <div class="vs-card playwright">
+      <h4>Playwright (TypeScript)</h4>
+      <ul>
+        <li>Built-in auto-wait — almost no flakiness by default</li>
+        <li>Trace viewer — visual replay of every test failure</li>
+        <li>Codegen — record interactions to generate test code</li>
+        <li>Native API testing in the same test file</li>
+        <li>Faster execution, better debugging DX</li>
+        <li>Modern choice for greenfield projects</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="verdict-box">
+    <strong>When to choose Selenium:</strong> Enterprise teams with existing Java infrastructure, cross-browser requirements, or cloud grid needs. When the team already knows Java and you need to onboard without a language switch.<br/><br/>
+    <strong>When to choose Playwright:</strong> Greenfield projects, TypeScript/JS teams, when developer experience matters most, or when you want the fastest path to reliable end-to-end tests. For most modern teams starting fresh, Playwright is the better default.
+  </div>
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════ VIETNAMESE ══════════════════════════════════════ -->
+<div id="vi" class="version">
+<div class="container">
+
+  <div class="hero">
+    <h1>ui-api-<span>selenium</span></h1>
+    <p>Framework kiểm thử tự động bằng Java cho cả UI và API. Thiết kế để cả team dùng được — không chỉ riêng QA.</p>
+    <div class="badge-row">
+      <span class="badge">Java 8</span>
+      <span class="badge">Selenium 4.6</span>
+      <span class="badge">RestAssured 5.3</span>
+      <span class="badge">TestNG 7.4</span>
+      <span class="badge">Maven 3.8</span>
+      <span class="badge">WebDriverManager 6.1</span>
+      <span class="badge">Jackson 2.17</span>
+    </div>
+  </div>
+
+  <!-- CẤU TRÚC -->
+  <h2>Cấu trúc</h2>
+  <p>Ba tầng rõ ràng. Mỗi tầng có một nhiệm vụ duy nhất và chỉ phụ thuộc vào tầng bên dưới.</p>
+
+  <div class="layers">
+    <div class="layer-card">
+      <div class="num">Tầng 1</div>
+      <h4>Infrastructure <code>common/</code></h4>
+      <ul>
+        <li>AutomationConfigs (đọc config)</li>
+        <li>DriverManager / DriverFactory</li>
+        <li>DriverStorage (ThreadLocal)</li>
+        <li>BaseAPIs (HTTP wrappers)</li>
+        <li>Cleanup (dọn dữ liệu test)</li>
+      </ul>
+    </div>
+    <div class="layer-card">
+      <div class="num">Tầng 2</div>
+      <h4>Abstraction <code>pom/ apis/</code></h4>
+      <ul>
+        <li>ReqresHomePage</li>
+        <li>PracticeAutomationLoginPage</li>
+        <li>UsersApiClient</li>
+        <li>JsonPlaceholderUser (POJO)</li>
+      </ul>
+    </div>
+    <div class="layer-card">
+      <div class="num">Tầng 3</div>
+      <h4>Tests <code>acceptance_test/ api_test/</code></h4>
+      <ul>
+        <li>ReqresHomeTest (UI)</li>
+        <li>UsersApiTest (API)</li>
+        <li>Chỉ chứa AAA specs</li>
+        <li>Không gọi Selenium hay HTTP trực tiếp</li>
+      </ul>
+    </div>
+  </div>
+
+  <br />
+  <div class="tree">
+<span class="dir">src/test/java/</span>
+  <span class="dir">common/</span>                     <span class="comment">← infrastructure layer (core dùng chung)</span>
+    <span class="dir">driver/</span>                   <span class="comment">← vòng đời WebDriver và thread isolation</span>
+    <span class="dir">apis/</span>                     <span class="comment">← HTTP base client và typed clients</span>
+    <span class="dir">utils/</span>                    <span class="comment">← Selenium actions, JSON, sorting</span>
+    <span class="dir">cleanup/</span>                  <span class="comment">← dọn test data sau mỗi test</span>
+    <span class="file">AutomationConfigs.java</span>    <span class="comment">← đọc config dạng singleton</span>
+  <span class="dir">acceptance_test/</span>            <span class="comment">← UI abstraction + test layer</span>
+    <span class="dir">pom/</span>                      <span class="comment">← page objects</span>
+    <span class="file">BaseTest.java</span>             <span class="comment">← TestNG hooks, khởi tạo driver</span>
+    <span class="file">ReqresHomeTest.java</span>       <span class="comment">← UI test specs</span>
+  <span class="dir">api_test/</span>                   <span class="comment">← API abstraction + test layer</span>
+    <span class="file">BaseTest.java</span>             <span class="comment">← TestNG hooks, khởi tạo API client</span>
+    <span class="file">UsersApiTest.java</span>         <span class="comment">← API test specs</span>
+  <span class="dir">unit/</span>                       <span class="comment">← unit tests cho tầng infrastructure</span>
+  <span class="dir">pojos/</span>                      <span class="comment">← typed response models</span>
+  <span class="file">parallelRun.xml</span>             <span class="comment">← TestNG chạy song song</span>
+  <span class="file">unitTests.xml</span>               <span class="comment">← TestNG unit test suite (CI mặc định)</span>
+<span class="dir">src/resources/</span>
+  <span class="file">config.properties</span>           <span class="comment">← config theo môi trường</span>
+  </div>
+
+  <!-- TÍNH NĂNG -->
+  <h2>Tính năng hiện tại</h2>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">🌐</div>
+      <h4>UI Tests (Selenium)</h4>
+      <p>Kiểm tra hero heading trên reqres.in · Luồng đăng nhập trên practicetestautomation.com · Chrome headed qua WebDriverManager</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔌</div>
+      <h4>API Tests (RestAssured)</h4>
+      <p>CRUD đầy đủ trên JSONPlaceholder /users — list, get, create, delete · Assertion qua Jackson POJO có kiểu</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⚡</div>
+      <h4>Chạy song song</h4>
+      <p>TestNG <code>parallel="methods"</code>, 2 threads · Thread-safe qua <code>ThreadLocal&lt;WebDriver&gt;</code> trong DriverStorage · Không bị race condition</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🧪</div>
+      <h4>Unit Tests</h4>
+      <p>Kiểm tra singleton AutomationConfigs · Null safety của JsonUtils · Chạy nhanh, không cần browser, là suite mặc định trên CI</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔍</div>
+      <h4>Checkstyle Linting</h4>
+      <p>Ruleset tùy chỉnh: braces, imports, whitespace, naming convention · Chạy thành job riêng trên CI</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🛡️</div>
+      <h4>Trivy Security Scan</h4>
+      <p>Scan filesystem mỗi lần push và PR · Fail CI nếu có CVE mức HIGH/CRITICAL · Không cần token hay tài khoản</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🚀</div>
+      <h4>CI / GitHub Actions</h4>
+      <p>3 job chạy song song: Checkstyle · Unit Tests có test-reporter · Trivy security scan</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⚙️</div>
+      <h4>Config tách biệt</h4>
+      <p><code>config.properties</code> cho URL, credential, timeout, browser · Test data theo môi trường trong <code>data/qa/</code></p>
+    </div>
+  </div>
+
+  <!-- MỤC TIÊU -->
+  <h2>Mục tiêu thiết kế</h2>
+  <p>Framework được xây dựng như một <strong style="color:var(--text)">nền tảng (platform)</strong>, không phải tập hợp script. Mục tiêu là mọi engineer trong team — không chỉ QA — đều có thể đóng góp test mà không cần kiến thức chuyên sâu. Package <code>common/</code> có tính opinionated để đảm bảo nhất quán; các phần mở rộng (page objects, API clients) là nơi từng team tự do thêm.</p>
+  <p>Mục tiêu thứ hai là thể hiện khả năng scale: <code>ThreadLocal</code> đảm bảo isolation cho parallel test hôm nay — nguyên lý tương tự áp dụng cho kiến trúc pod-per-test trên Kubernetes ngày mai.</p>
+
+  <!-- TỐT / CHƯA TỐT -->
+  <h2>Điểm tốt / Chưa tốt</h2>
+  <div class="verdict">
+    <div class="verdict-card good">
+      <h4>Điểm tốt</h4>
+      <ul>
+        <li>ThreadLocal driver isolation — parallel test không xung đột nhau</li>
+        <li>API response có kiểu — assertion an toàn khi refactor</li>
+        <li>Phân tầng rõ ràng — test code đọc như văn xuôi</li>
+        <li>CI mặc định chạy nhanh — unit test chạy &lt;2s, không cần browser</li>
+        <li>Security scanning được tích hợp từ đầu</li>
+        <li>Config tách khỏi code — không có URL hardcoded trong test</li>
+      </ul>
+    </div>
+    <div class="verdict-card bad">
+      <h4>Chưa tốt</h4>
+      <ul>
+        <li>E2E test chưa chạy được trên CI — cần Xvfb hoặc remote grid</li>
+        <li>Selenium 4.6 đã cũ — có warning CDP trên Chrome 148</li>
+        <li>Không có toggle headless/headed trong config</li>
+        <li>AutomationConfigs đọc file mỗi lần gọi — không cache</li>
+        <li>Không có retry logic khi UI test bị flaky</li>
+        <li>Coverage còn mỏng — chỉ có 2 UI và 4 API test</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- THIẾU -->
+  <h2>Còn thiếu gì</h2>
+  <ul class="missing-list">
+    <li>
+      <span class="tag high">Cao</span>
+      <span><strong style="color:var(--text)">E2E test trên CI</strong> — UI test chỉ chạy được local. CI cần headless Chrome + Xvfb, hoặc kết nối remote grid (Selenium Grid, BrowserStack).</span>
+    </li>
+    <li>
+      <span class="tag high">Cao</span>
+      <span><strong style="color:var(--text)">Retry mechanism</strong> — Không xử lý được lỗi tạm thời (mạng chập, trang load chậm). Cần thêm <code>IRetryAnalyzer</code> của TestNG cho framework production.</span>
+    </li>
+    <li>
+      <span class="tag medium">Vừa</span>
+      <span><strong style="color:var(--text)">HTML test report</strong> — Hiện chỉ có XML Surefire. Allure hoặc ExtentReports sẽ cho lịch sử chạy trực quan, screenshot khi fail, biểu đồ xu hướng.</span>
+    </li>
+    <li>
+      <span class="tag medium">Vừa</span>
+      <span><strong style="color:var(--text)">Screenshot khi fail</strong> — Không có hook chụp màn hình khi UI test thất bại. Debug trên CI không có ảnh là gần như mù.</span>
+    </li>
+    <li>
+      <span class="tag medium">Vừa</span>
+      <span><strong style="color:var(--text)">Config headless mode</strong> — Chrome mặc định headed. Nên thêm flag trong config để CI chạy headless, local chạy headed.</span>
+    </li>
+    <li>
+      <span class="tag low">Thấp</span>
+      <span><strong style="color:var(--text)">Multi-environment</strong> — <code>config.properties</code> chỉ cho một môi trường. Nên dùng profile Maven với <code>config-qa.properties</code>, <code>config-staging.properties</code> riêng.</span>
+    </li>
+    <li>
+      <span class="tag low">Thấp</span>
+      <span><strong style="color:var(--text)">Logging</strong> — Không có SLF4J binding, chỉ có console output. Logger có cấu trúc giúp trace lỗi trên CI dễ hơn nhiều.</span>
+    </li>
+  </ul>
+
+  <!-- ĐÁNH ĐỔI -->
+  <h2>Các đánh đổi (Tradeoffs)</h2>
+  <table>
+    <thead>
+      <tr><th>Quyết định</th><th>Lý do chọn</th><th>Chi phí phải trả</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Java cho cả UI & API</td>
+        <td>Một ngôn ngữ, một repo — mọi engineer đều đọc và đóng góp được</td>
+        <td>Verbose hơn Python/JS; RestAssured có đường cong học tập dốc hơn</td>
+      </tr>
+      <tr>
+        <td>TestNG thay vì JUnit 5</td>
+        <td>Cấu hình parallel sẵn qua XML; linh hoạt trong cách tổ chức suite</td>
+        <td>XML suite file kém trực quan hơn annotations của JUnit 5; hệ sinh thái hiện đại nhỏ hơn</td>
+      </tr>
+      <tr>
+        <td>TestNG thay vì Cucumber/BDD</td>
+        <td>Viết nhanh hơn, debug dễ hơn, không cần duy trì lớp Gherkin</td>
+        <td>Non-engineer không đọc được spec mà không hiểu code</td>
+      </tr>
+      <tr>
+        <td>ThreadLocal driver isolation</td>
+        <td>Parallel-safe không cần lock; scale ngang chỉ bằng cách tăng thread-count</td>
+        <td>Khó hiểu hơn với engineer chưa quen ThreadLocal semantics</td>
+      </tr>
+      <tr>
+        <td>Selenium thay vì Playwright</td>
+        <td>Hỗ trợ đa browser, tích hợp cloud grid (BrowserStack, SauceLabs), hệ sinh thái trưởng thành</td>
+        <td>Nhiều boilerplate hơn, không có auto-wait sẵn, không có trace viewer, viết chậm hơn</td>
+      </tr>
+      <tr>
+        <td>Trivy thay vì Snyk</td>
+        <td>Miễn phí, không cần tài khoản, không cần token, hoạt động luôn trên GHA</td>
+        <td>Không có UI gợi ý fix, không tự tạo PR, không có dashboard cho team</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ARCHITECTURE DIFF -->
+  <h2>So sánh kiến trúc — Selenium vs Playwright</h2>
+  <p>Cùng triết lý 3 tầng, khác ngôn ngữ và tooling. Mỗi dòng thể hiện pattern tương đương giữa hai framework.</p>
+
+  <h3>Cấu trúc thư mục</h3>
+  <div class="diff-label">
+    <span class="lbl-sel">Selenium · Java</span>
+    <span class="lbl-pw">Playwright · TypeScript</span>
+  </div>
+  <div class="diff-struct">
+    <div class="tree">
+<span class="dir">src/test/java/</span>
+  <span class="dir">common/</span>               <span class="comment">← infrastructure</span>
+    <span class="dir">driver/</span>             <span class="comment">← vòng đời WebDriver</span>
+    <span class="dir">apis/</span>               <span class="comment">← HTTP clients</span>
+    <span class="file">AutomationConfigs.java</span>
+  <span class="dir">acceptance_test/</span>
+    <span class="dir">pom/</span>                <span class="comment">← page objects</span>
+    <span class="file">BaseTest.java</span>       <span class="comment">← @Before/@After</span>
+    <span class="file">ReqresHomeTest.java</span>
+  <span class="dir">api_test/</span>
+    <span class="file">UsersApiTest.java</span>
+  <span class="dir">pojos/</span>               <span class="comment">← typed models</span>
+<span class="dir">src/resources/</span>
+  <span class="file">config.properties</span>
+    </div>
+    <div class="tree">
+<span class="dir">src/</span>
+  <span class="dir">infrastructure/</span>       <span class="comment">← infrastructure</span>
+    <span class="file">env.config.ts</span>       <span class="comment">← URLs, env vars</span>
+    <span class="file">credentials.ts</span>
+  <span class="dir">lib/</span>
+    <span class="dir">ui/</span>                 <span class="comment">← page objects</span>
+      <span class="file">ReqresHomePage.ts</span>
+    <span class="dir">api/</span>                <span class="comment">← API clients</span>
+      <span class="file">ReqresApiClient.ts</span>
+    <span class="dir">fixtures/</span>           <span class="comment">← DI qua test.extend()</span>
+      <span class="file">index.ts</span>
+  <span class="dir">tests/</span>
+    <span class="dir">ui/</span>
+    <span class="dir">api/</span>
+  <span class="file">playwright.config.ts</span>
+    </div>
+  </div>
+
+  <h3>So sánh từng pattern</h3>
+  <div class="diff-label">
+    <span class="lbl-sel">Selenium · Java</span>
+    <span class="lbl-pw">Playwright · TypeScript</span>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Khởi tạo browser</div>
+    <div class="diff-sel"><span class="cm">// WebDriverManager tải driver binary về</span>
+WebDriverManager.chromedriver().setup();
+<span class="kw">driver</span> = <span class="kw">new</span> <span class="ty">ChromeDriver</span>();</div>
+    <div class="diff-pw"><span class="cm">// Cấu hình trong playwright.config.ts — không cần binary</span>
+projects: [{ name: <span class="ty">'chromium'</span>,
+  use: { ...devices[<span class="ty">'Desktop Chrome'</span>] } }]</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Thread / Process Isolation</div>
+    <div class="diff-sel"><span class="cm">// ThreadLocal — mỗi thread có driver riêng</span>
+<span class="kw">private static final</span> <span class="ty">ThreadLocal</span>&lt;<span class="ty">WebDriver</span>&gt;
+  driverThreadLocal = <span class="kw">new</span> <span class="ty">ThreadLocal</span>&lt;&gt;();</div>
+    <div class="diff-pw"><span class="cm">// Worker process — không share state từ đầu</span>
+workers: 2  <span class="cm">// mỗi worker là process độc lập</span></div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Page Object</div>
+    <div class="diff-sel"><span class="kw">public class</span> <span class="ty">ReqresHomePage</span> <span class="kw">extends</span> <span class="ty">BasePage</span> {
+  <span class="kw">private static final</span> <span class="ty">By</span> HEADING =
+    <span class="ty">By</span>.xpath(<span class="ty">".//h1[contains(.,'A real backend')]"</span>);
+
+  <span class="kw">public boolean</span> isHeroHeadingVisible() {
+    <span class="kw">return</span> waitUntilPresent(HEADING).isDisplayed();
+  }
+}</div>
+    <div class="diff-pw"><span class="kw">export class</span> <span class="ty">ReqresHomePage</span> {
+  <span class="kw">readonly</span> heading: <span class="ty">Locator</span>;
+  <span class="kw">constructor</span>(<span class="kw">private</span> page: <span class="ty">Page</span>) {
+    <span class="kw">this</span>.heading = page.getByRole(<span class="ty">'heading'</span>,
+      { name: <span class="ty">/A real backend/i</span> });
+  }
+}</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Waits</div>
+    <div class="diff-sel"><span class="cm">// Explicit — phải bọc mỗi tương tác</span>
+<span class="kw">new</span> <span class="ty">WebDriverWait</span>(driver, <span class="ty">Duration</span>.ofSeconds(30))
+  .until(ExpectedConditions
+    .visibilityOfElementLocated(locator));</div>
+    <div class="diff-pw"><span class="cm">// Auto-wait — tích hợp sẵn trong mọi action</span>
+<span class="kw">await</span> page.click(<span class="ty">'#submit'</span>);
+<span class="cm">// tự chờ element visible + stable</span></div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Fixtures / DI</div>
+    <div class="diff-sel"><span class="cm">// Kế thừa — BaseTest setup shared state</span>
+<span class="kw">public class</span> <span class="ty">ReqresHomeTest</span> <span class="kw">extends</span> <span class="ty">BaseTest</span> {
+  <span class="cm">// reqresHomePage inject qua @BeforeMethod</span>
+  @<span class="ty">Test</span>
+  <span class="kw">public void</span> verifyHeroHeading() { ... }
+}</div>
+    <div class="diff-pw"><span class="cm">// Composition — test.extend() inject fixture</span>
+<span class="kw">const</span> { test } = <span class="kw">import</span>(<span class="ty">'lib/fixtures'</span>);
+test(<span class="ty">'hero heading visible'</span>,
+  <span class="kw">async</span> ({ reqresHome }) =&gt; { ... });</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">API Testing</div>
+    <div class="diff-sel"><span class="cm">// RestAssured — dependency riêng</span>
+<span class="ty">Response</span> res = given()
+  .contentType(<span class="ty">ContentType</span>.JSON)
+  .body(payload)
+  .post(<span class="ty">"/users"</span>);
+<span class="ty">JsonPlaceholderUser</span> user =
+  res.as(<span class="ty">JsonPlaceholderUser</span>.class);</div>
+    <div class="diff-pw"><span class="cm">// request context có sẵn — không cần dep thêm</span>
+<span class="kw">const</span> res = <span class="kw">await</span> request.post(<span class="ty">'/users'</span>,
+  { data: payload });
+<span class="kw">const</span> user = <span class="kw">await</span> res.json();</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Config</div>
+    <div class="diff-sel"><span class="cm"># config.properties</span>
+application.ui.baseUrl=https://reqres.in
+application.api.baseUrl=https://jsonplaceholder...
+automation.browser=chrome</div>
+    <div class="diff-pw"><span class="cm">// playwright.config.ts</span>
+<span class="kw">export default</span> defineConfig({
+  use: { baseURL: env.apiBaseUrl },
+  projects: [{ use: { ...devices[<span class="ty">'Desktop Chrome'</span>] } }]
+});</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Assertions</div>
+    <div class="diff-sel"><span class="cm">// TestNG Assert — synchronous</span>
+<span class="ty">Assert</span>.assertEquals(user.getName(), expected);
+<span class="ty">Assert</span>.assertTrue(page.isHeroHeadingVisible());</div>
+    <div class="diff-pw"><span class="cm">// expect() — async, tự retry khi fail</span>
+<span class="kw">await</span> expect(page.heading).toBeVisible();
+expect(user.name).toBe(expected);</div>
+  </div>
+
+  <!-- VS PLAYWRIGHT -->
+  <h2>So sánh với Playwright</h2>
+  <div class="vs-grid">
+    <div class="vs-card selenium">
+      <h4>Selenium (repo này)</h4>
+      <ul>
+        <li>Đa browser: Chrome, Firefox, Safari, Edge, IE</li>
+        <li>Tích hợp cloud grid: BrowserStack, SauceLabs, Selenium Grid</li>
+        <li>Hệ sinh thái trưởng thành, cộng đồng lớn, 15+ năm</li>
+        <li>Java — cùng ngôn ngữ với backend team</li>
+        <li>Explicit waits, quen thuộc với QA truyền thống</li>
+        <li>Tiêu chuẩn trong tuyển dụng QA enterprise</li>
+      </ul>
+    </div>
+    <div class="vs-card playwright">
+      <h4>Playwright (TypeScript)</h4>
+      <ul>
+        <li>Auto-wait có sẵn — gần như không bị flaky mặc định</li>
+        <li>Trace viewer — xem lại từng bước khi test fail</li>
+        <li>Codegen — record tương tác để sinh code test tự động</li>
+        <li>Test API native trong cùng file test với UI</li>
+        <li>Chạy nhanh hơn, DX tốt hơn, debug dễ hơn</li>
+        <li>Lựa chọn hiện đại cho project mới</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="verdict-box">
+    <strong>Khi nào nên chọn Selenium:</strong> Team enterprise có hạ tầng Java sẵn, yêu cầu đa browser, hoặc cần kết nối cloud grid. Khi team đã quen Java và không muốn chuyển đổi ngôn ngữ.<br/><br/>
+    <strong>Khi nào nên chọn Playwright:</strong> Project mới, team TypeScript/JS, khi developer experience là ưu tiên hàng đầu, hoặc khi muốn viết end-to-end test ổn định theo cách nhanh nhất. Với hầu hết team hiện đại bắt đầu từ đầu, Playwright là lựa chọn tốt hơn.
+  </div>
+
+</div>
+</div>
+
+<script>
+  function setLang(lang) {
+    document.querySelectorAll('.version').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.lang-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(lang).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>
