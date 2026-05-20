@@ -250,6 +250,78 @@
       border-radius: 4px;
       color: var(--accent2);
     }
+
+    /* ── Architecture diff ── */
+    .diff-label {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .diff-label span {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+    .diff-label .lbl-sel  { background: #2a1800; color: #fb923c; }
+    .diff-label .lbl-pw   { background: #0a2a1a; color: var(--green); }
+    .diff-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      font-size: 12.5px;
+    }
+    @media (max-width: 700px) {
+      .diff-row { grid-template-columns: 1fr; }
+    }
+    .diff-concept {
+      background: var(--surface2);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      border-right: 1px solid var(--border);
+    }
+    .diff-sel, .diff-pw {
+      padding: 12px 16px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .diff-sel {
+      background: #140d00;
+      color: #fb923c;
+      border-right: 1px solid var(--border);
+    }
+    .diff-pw {
+      background: #001a0d;
+      color: #34d399;
+    }
+    .diff-sel .cm, .diff-pw .cm { color: #3a4a3a; }
+    .diff-sel .kw { color: #fbbf24; }
+    .diff-pw  .kw { color: #6ee7b7; }
+    .diff-sel .ty { color: #fdba74; }
+    .diff-pw  .ty { color: #a7f3d0; }
+    .diff-struct {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    @media (max-width: 700px) { .diff-struct { grid-template-columns: 1fr; } }
+    .diff-struct .tree { margin: 0; }
   </style>
 </head>
 <body>
@@ -489,6 +561,158 @@
       </tr>
     </tbody>
   </table>
+
+  <!-- ARCHITECTURE DIFF -->
+  <h2>Architecture Diff — Selenium vs Playwright</h2>
+  <p>Same three-layer philosophy, different language and tooling. Each row shows the equivalent pattern in both frameworks.</p>
+
+  <h3>Project Structure</h3>
+  <div class="diff-label">
+    <span class="lbl-sel">Selenium · Java</span>
+    <span class="lbl-pw">Playwright · TypeScript</span>
+  </div>
+  <div class="diff-struct">
+    <div class="tree">
+<span class="dir">src/test/java/</span>
+  <span class="dir">common/</span>               <span class="comment">← infrastructure</span>
+    <span class="dir">driver/</span>             <span class="comment">← WebDriver lifecycle</span>
+    <span class="dir">apis/</span>               <span class="comment">← HTTP clients</span>
+    <span class="file">AutomationConfigs.java</span>
+  <span class="dir">acceptance_test/</span>
+    <span class="dir">pom/</span>                <span class="comment">← page objects</span>
+    <span class="file">BaseTest.java</span>       <span class="comment">← @Before/@After</span>
+    <span class="file">ReqresHomeTest.java</span>
+  <span class="dir">api_test/</span>
+    <span class="file">UsersApiTest.java</span>
+  <span class="dir">pojos/</span>               <span class="comment">← typed models</span>
+<span class="dir">src/resources/</span>
+  <span class="file">config.properties</span>
+    </div>
+    <div class="tree">
+<span class="dir">src/</span>
+  <span class="dir">infrastructure/</span>       <span class="comment">← infrastructure</span>
+    <span class="file">env.config.ts</span>       <span class="comment">← URLs, env vars</span>
+    <span class="file">credentials.ts</span>
+  <span class="dir">lib/</span>
+    <span class="dir">ui/</span>                 <span class="comment">← page objects</span>
+      <span class="file">ReqresHomePage.ts</span>
+    <span class="dir">api/</span>                <span class="comment">← API clients</span>
+      <span class="file">ReqresApiClient.ts</span>
+    <span class="dir">fixtures/</span>           <span class="comment">← DI via test.extend()</span>
+      <span class="file">index.ts</span>
+  <span class="dir">tests/</span>
+    <span class="dir">ui/</span>
+    <span class="dir">api/</span>
+  <span class="file">playwright.config.ts</span>
+    </div>
+  </div>
+
+  <h3>Pattern Comparison</h3>
+  <div class="diff-label">
+    <span class="lbl-sel">Selenium · Java</span>
+    <span class="lbl-pw">Playwright · TypeScript</span>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Browser Setup</div>
+    <div class="diff-sel"><span class="cm">// WebDriverManager resolves driver binary</span>
+WebDriverManager.chromedriver().setup();
+<span class="kw">driver</span> = <span class="kw">new</span> <span class="ty">ChromeDriver</span>();</div>
+    <div class="diff-pw"><span class="cm">// Built into playwright.config.ts — no binary mgmt</span>
+projects: [{ name: <span class="ty">'chromium'</span>,
+  use: { ...devices[<span class="ty">'Desktop Chrome'</span>] } }]</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Thread / Process Isolation</div>
+    <div class="diff-sel"><span class="cm">// ThreadLocal — one driver per thread</span>
+<span class="kw">private static final</span> <span class="ty">ThreadLocal</span>&lt;<span class="ty">WebDriver</span>&gt;
+  driverThreadLocal = <span class="kw">new</span> <span class="ty">ThreadLocal</span>&lt;&gt;();</div>
+    <div class="diff-pw"><span class="cm">// Worker processes — no shared state by design</span>
+workers: 2  <span class="cm">// each worker is an isolated process</span></div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Page Object</div>
+    <div class="diff-sel"><span class="kw">public class</span> <span class="ty">ReqresHomePage</span> <span class="kw">extends</span> <span class="ty">BasePage</span> {
+  <span class="kw">private static final</span> <span class="ty">By</span> HEADING =
+    <span class="ty">By</span>.xpath(<span class="ty">".//h1[contains(.,'A real backend')]"</span>);
+
+  <span class="kw">public boolean</span> isHeroHeadingVisible() {
+    <span class="kw">return</span> waitUntilPresent(HEADING).isDisplayed();
+  }
+}</div>
+    <div class="diff-pw"><span class="kw">export class</span> <span class="ty">ReqresHomePage</span> {
+  <span class="kw">readonly</span> heading: <span class="ty">Locator</span>;
+  <span class="kw">constructor</span>(<span class="kw">private</span> page: <span class="ty">Page</span>) {
+    <span class="kw">this</span>.heading = page.getByRole(<span class="ty">'heading'</span>,
+      { name: <span class="ty">/A real backend/i</span> });
+  }
+}</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Waits</div>
+    <div class="diff-sel"><span class="cm">// Explicit — must wrap every interaction</span>
+<span class="kw">new</span> <span class="ty">WebDriverWait</span>(driver, <span class="ty">Duration</span>.ofSeconds(30))
+  .until(ExpectedConditions
+    .visibilityOfElementLocated(locator));</div>
+    <div class="diff-pw"><span class="cm">// Auto-wait — built into every action</span>
+<span class="kw">await</span> page.click(<span class="ty">'#submit'</span>);
+<span class="cm">// waits for element to be visible + stable</span></div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Test Fixtures / DI</div>
+    <div class="diff-sel"><span class="cm">// Inheritance — BaseTest wires up shared state</span>
+<span class="kw">public class</span> <span class="ty">ReqresHomeTest</span> <span class="kw">extends</span> <span class="ty">BaseTest</span> {
+  <span class="cm">// reqresHomePage injected via @BeforeMethod</span>
+  @<span class="ty">Test</span>
+  <span class="kw">public void</span> verifyHeroHeading() { ... }
+}</div>
+    <div class="diff-pw"><span class="cm">// Composition — test.extend() injects fixtures</span>
+<span class="kw">const</span> { test } = <span class="kw">import</span>(<span class="ty">'lib/fixtures'</span>);
+test(<span class="ty">'hero heading visible'</span>,
+  <span class="kw">async</span> ({ reqresHome }) =&gt; { ... });</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">API Testing</div>
+    <div class="diff-sel"><span class="cm">// RestAssured — separate dependency</span>
+<span class="ty">Response</span> res = given()
+  .contentType(<span class="ty">ContentType</span>.JSON)
+  .body(payload)
+  .post(<span class="ty">"/users"</span>);
+<span class="ty">JsonPlaceholderUser</span> user =
+  res.as(<span class="ty">JsonPlaceholderUser</span>.class);</div>
+    <div class="diff-pw"><span class="cm">// Built-in request context — no extra dep</span>
+<span class="kw">const</span> res = <span class="kw">await</span> request.post(<span class="ty">'/users'</span>,
+  { data: payload });
+<span class="kw">const</span> user = <span class="kw">await</span> res.json();</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Config</div>
+    <div class="diff-sel"><span class="cm"># config.properties</span>
+application.ui.baseUrl=https://reqres.in
+application.api.baseUrl=https://jsonplaceholder...
+automation.browser=chrome</div>
+    <div class="diff-pw"><span class="cm">// playwright.config.ts</span>
+<span class="kw">export default</span> defineConfig({
+  use: { baseURL: env.apiBaseUrl },
+  projects: [{ use: { ...devices[<span class="ty">'Desktop Chrome'</span>] } }]
+});</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Assertions</div>
+    <div class="diff-sel"><span class="cm">// TestNG Assert — synchronous</span>
+<span class="ty">Assert</span>.assertEquals(user.getName(), expected);
+<span class="ty">Assert</span>.assertTrue(page.isHeroHeadingVisible());</div>
+    <div class="diff-pw"><span class="cm">// expect() — async, auto-retry on failure</span>
+<span class="kw">await</span> expect(page.heading).toBeVisible();
+expect(user.name).toBe(expected);</div>
+  </div>
 
   <!-- VS PLAYWRIGHT -->
   <h2>Selenium vs Playwright</h2>
@@ -754,6 +978,158 @@
       </tr>
     </tbody>
   </table>
+
+  <!-- ARCHITECTURE DIFF -->
+  <h2>So sánh kiến trúc — Selenium vs Playwright</h2>
+  <p>Cùng triết lý 3 tầng, khác ngôn ngữ và tooling. Mỗi dòng thể hiện pattern tương đương giữa hai framework.</p>
+
+  <h3>Cấu trúc thư mục</h3>
+  <div class="diff-label">
+    <span class="lbl-sel">Selenium · Java</span>
+    <span class="lbl-pw">Playwright · TypeScript</span>
+  </div>
+  <div class="diff-struct">
+    <div class="tree">
+<span class="dir">src/test/java/</span>
+  <span class="dir">common/</span>               <span class="comment">← infrastructure</span>
+    <span class="dir">driver/</span>             <span class="comment">← vòng đời WebDriver</span>
+    <span class="dir">apis/</span>               <span class="comment">← HTTP clients</span>
+    <span class="file">AutomationConfigs.java</span>
+  <span class="dir">acceptance_test/</span>
+    <span class="dir">pom/</span>                <span class="comment">← page objects</span>
+    <span class="file">BaseTest.java</span>       <span class="comment">← @Before/@After</span>
+    <span class="file">ReqresHomeTest.java</span>
+  <span class="dir">api_test/</span>
+    <span class="file">UsersApiTest.java</span>
+  <span class="dir">pojos/</span>               <span class="comment">← typed models</span>
+<span class="dir">src/resources/</span>
+  <span class="file">config.properties</span>
+    </div>
+    <div class="tree">
+<span class="dir">src/</span>
+  <span class="dir">infrastructure/</span>       <span class="comment">← infrastructure</span>
+    <span class="file">env.config.ts</span>       <span class="comment">← URLs, env vars</span>
+    <span class="file">credentials.ts</span>
+  <span class="dir">lib/</span>
+    <span class="dir">ui/</span>                 <span class="comment">← page objects</span>
+      <span class="file">ReqresHomePage.ts</span>
+    <span class="dir">api/</span>                <span class="comment">← API clients</span>
+      <span class="file">ReqresApiClient.ts</span>
+    <span class="dir">fixtures/</span>           <span class="comment">← DI qua test.extend()</span>
+      <span class="file">index.ts</span>
+  <span class="dir">tests/</span>
+    <span class="dir">ui/</span>
+    <span class="dir">api/</span>
+  <span class="file">playwright.config.ts</span>
+    </div>
+  </div>
+
+  <h3>So sánh từng pattern</h3>
+  <div class="diff-label">
+    <span class="lbl-sel">Selenium · Java</span>
+    <span class="lbl-pw">Playwright · TypeScript</span>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Khởi tạo browser</div>
+    <div class="diff-sel"><span class="cm">// WebDriverManager tải driver binary về</span>
+WebDriverManager.chromedriver().setup();
+<span class="kw">driver</span> = <span class="kw">new</span> <span class="ty">ChromeDriver</span>();</div>
+    <div class="diff-pw"><span class="cm">// Cấu hình trong playwright.config.ts — không cần binary</span>
+projects: [{ name: <span class="ty">'chromium'</span>,
+  use: { ...devices[<span class="ty">'Desktop Chrome'</span>] } }]</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Thread / Process Isolation</div>
+    <div class="diff-sel"><span class="cm">// ThreadLocal — mỗi thread có driver riêng</span>
+<span class="kw">private static final</span> <span class="ty">ThreadLocal</span>&lt;<span class="ty">WebDriver</span>&gt;
+  driverThreadLocal = <span class="kw">new</span> <span class="ty">ThreadLocal</span>&lt;&gt;();</div>
+    <div class="diff-pw"><span class="cm">// Worker process — không share state từ đầu</span>
+workers: 2  <span class="cm">// mỗi worker là process độc lập</span></div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Page Object</div>
+    <div class="diff-sel"><span class="kw">public class</span> <span class="ty">ReqresHomePage</span> <span class="kw">extends</span> <span class="ty">BasePage</span> {
+  <span class="kw">private static final</span> <span class="ty">By</span> HEADING =
+    <span class="ty">By</span>.xpath(<span class="ty">".//h1[contains(.,'A real backend')]"</span>);
+
+  <span class="kw">public boolean</span> isHeroHeadingVisible() {
+    <span class="kw">return</span> waitUntilPresent(HEADING).isDisplayed();
+  }
+}</div>
+    <div class="diff-pw"><span class="kw">export class</span> <span class="ty">ReqresHomePage</span> {
+  <span class="kw">readonly</span> heading: <span class="ty">Locator</span>;
+  <span class="kw">constructor</span>(<span class="kw">private</span> page: <span class="ty">Page</span>) {
+    <span class="kw">this</span>.heading = page.getByRole(<span class="ty">'heading'</span>,
+      { name: <span class="ty">/A real backend/i</span> });
+  }
+}</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Waits</div>
+    <div class="diff-sel"><span class="cm">// Explicit — phải bọc mỗi tương tác</span>
+<span class="kw">new</span> <span class="ty">WebDriverWait</span>(driver, <span class="ty">Duration</span>.ofSeconds(30))
+  .until(ExpectedConditions
+    .visibilityOfElementLocated(locator));</div>
+    <div class="diff-pw"><span class="cm">// Auto-wait — tích hợp sẵn trong mọi action</span>
+<span class="kw">await</span> page.click(<span class="ty">'#submit'</span>);
+<span class="cm">// tự chờ element visible + stable</span></div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Fixtures / DI</div>
+    <div class="diff-sel"><span class="cm">// Kế thừa — BaseTest setup shared state</span>
+<span class="kw">public class</span> <span class="ty">ReqresHomeTest</span> <span class="kw">extends</span> <span class="ty">BaseTest</span> {
+  <span class="cm">// reqresHomePage inject qua @BeforeMethod</span>
+  @<span class="ty">Test</span>
+  <span class="kw">public void</span> verifyHeroHeading() { ... }
+}</div>
+    <div class="diff-pw"><span class="cm">// Composition — test.extend() inject fixture</span>
+<span class="kw">const</span> { test } = <span class="kw">import</span>(<span class="ty">'lib/fixtures'</span>);
+test(<span class="ty">'hero heading visible'</span>,
+  <span class="kw">async</span> ({ reqresHome }) =&gt; { ... });</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">API Testing</div>
+    <div class="diff-sel"><span class="cm">// RestAssured — dependency riêng</span>
+<span class="ty">Response</span> res = given()
+  .contentType(<span class="ty">ContentType</span>.JSON)
+  .body(payload)
+  .post(<span class="ty">"/users"</span>);
+<span class="ty">JsonPlaceholderUser</span> user =
+  res.as(<span class="ty">JsonPlaceholderUser</span>.class);</div>
+    <div class="diff-pw"><span class="cm">// request context có sẵn — không cần dep thêm</span>
+<span class="kw">const</span> res = <span class="kw">await</span> request.post(<span class="ty">'/users'</span>,
+  { data: payload });
+<span class="kw">const</span> user = <span class="kw">await</span> res.json();</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Config</div>
+    <div class="diff-sel"><span class="cm"># config.properties</span>
+application.ui.baseUrl=https://reqres.in
+application.api.baseUrl=https://jsonplaceholder...
+automation.browser=chrome</div>
+    <div class="diff-pw"><span class="cm">// playwright.config.ts</span>
+<span class="kw">export default</span> defineConfig({
+  use: { baseURL: env.apiBaseUrl },
+  projects: [{ use: { ...devices[<span class="ty">'Desktop Chrome'</span>] } }]
+});</div>
+  </div>
+
+  <div class="diff-row">
+    <div class="diff-concept">Assertions</div>
+    <div class="diff-sel"><span class="cm">// TestNG Assert — synchronous</span>
+<span class="ty">Assert</span>.assertEquals(user.getName(), expected);
+<span class="ty">Assert</span>.assertTrue(page.isHeroHeadingVisible());</div>
+    <div class="diff-pw"><span class="cm">// expect() — async, tự retry khi fail</span>
+<span class="kw">await</span> expect(page.heading).toBeVisible();
+expect(user.name).toBe(expected);</div>
+  </div>
 
   <!-- VS PLAYWRIGHT -->
   <h2>So sánh với Playwright</h2>
