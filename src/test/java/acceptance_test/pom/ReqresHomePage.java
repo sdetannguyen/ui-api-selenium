@@ -10,7 +10,7 @@ public class ReqresHomePage extends BasePage {
     private static final By HERO_HEADING = By.xpath(
             ".//h1[contains(.,'A real backend')]");
 
-    public void goto_() {
+    public void navigateTo() {
         DriverStorage.getDriver().get(
                 AutomationConfigs.getInstance().getConfigs().getProperty("application.ui.baseUrl"));
     }
